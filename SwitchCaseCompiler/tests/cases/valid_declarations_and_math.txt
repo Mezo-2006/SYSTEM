@@ -1,0 +1,9 @@
+int x = 1;
+int y = 0;
+int Z = 3;
+y = Z + 2;
+switch (x) {
+  case 1: y = y + Z; break;
+  case 2: y = y - 1; break;
+  default: y = 0; break;
+}

@@ -1,0 +1,10 @@
+^C:\USERS\MIZO\ONEDRIVE - ARAB ACADEMY FOR SCIENCE AND TECHNOLOGY\DESKTOP\SYSTEMS 2\SWITCHCASECOMPILER\BUILD\CMAKEFILES\548B9DE757FD36DF9E8ADC44361ED28A\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler" "-BC:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build/SwitchCaseCompiler.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

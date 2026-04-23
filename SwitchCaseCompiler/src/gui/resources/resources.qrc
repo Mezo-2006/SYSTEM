@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>cpp_icon.svg</file>
+    </qresource>
+    <qresource prefix="/styles">
+        <file>../modern_style.qss</file>
+    </qresource>
+</RCC>

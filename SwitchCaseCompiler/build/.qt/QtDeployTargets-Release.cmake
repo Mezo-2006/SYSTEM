@@ -1,0 +1,6 @@
+set(__QT_DEPLOY_TARGET_SwitchCaseCompiler_FILE C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build/Release/SwitchCaseCompiler.exe)
+set(__QT_DEPLOY_TARGET_SwitchCaseCompiler_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_SwitchCaseCompiler_RUNTIME_DLLS C:/Qt/6.8.3/msvc2022_64/bin/Qt6Widgets.dll;C:/Qt/6.8.3/msvc2022_64/bin/Qt6Gui.dll;C:/Qt/6.8.3/msvc2022_64/bin/Qt6Core.dll)
+set(__QT_DEPLOY_TARGET_SwitchCaseCompilerCLI_FILE C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build/Release/SwitchCaseCompilerCLI.exe)
+set(__QT_DEPLOY_TARGET_SwitchCaseCompilerCLI_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_SwitchCaseCompilerCLI_RUNTIME_DLLS )

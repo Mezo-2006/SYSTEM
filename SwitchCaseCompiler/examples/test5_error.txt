@@ -1,0 +1,8 @@
+// TEST CASE 5: Error Example
+// This has an intentional error (missing semicolon)
+// Use this to test error reporting
+
+switch (x) {
+  case 1: y = x + 2 break;
+  case 2: y = x * 3; break;
+}

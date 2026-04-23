@@ -1,0 +1,225 @@
+#include "GrammarCoverage.h"
+#include <QPainter>
+#include <QPainterPath>
+#include <QFontMetrics>
+#include <QScrollArea>
+#include <QVBoxLayout>
+#include <algorithm>
+
+GrammarCoverage::GrammarCoverage(QWidget* parent) : QWidget(parent) {
+    setStyleSheet("background:#0F172A;");
+    buildRules();
+    setMinimumHeight(900);
+}
+
+void GrammarCoverage::buildRules() {
+    // All 46 production rules from the CFG
+    rules = {
+        {"R1",  "program",        "preamble_opt pre_stmt_list switch_stmt"},
+        {"R2",  "preamble_opt",   "using_opt"},
+        {"R3",  "using_opt",      "using namespace std ;"},
+        {"R4",  "using_opt",      "ε"},
+        {"R5",  "pre_stmt_list",  "pre_stmt pre_stmt_list"},
+        {"R6",  "pre_stmt_list",  "ε"},
+        {"R7",  "pre_stmt",       "declaration"},
+        {"R8",  "pre_stmt",       "assignment"},
+        {"R9",  "declaration",    "type_spec identifier decl_init_opt ;"},
+        {"R10", "type_spec",      "int"},
+        {"R11", "type_spec",      "string"},
+        {"R12", "decl_init_opt",  "= expr"},
+        {"R13", "decl_init_opt",  "ε"},
+        {"R14", "assignment",     "identifier = expr ;"},
+        {"R15", "switch_stmt",    "switch ( expr ) { case_list default_clause }"},
+        {"R16", "case_list",      "case_clause case_list"},
+        {"R17", "case_list",      "ε"},
+        {"R18", "case_clause",    "case int_constant : stmt_list break ;"},
+        {"R19", "default_clause", "default : stmt_list break ;"},
+        {"R20", "default_clause", "ε"},
+        {"R21", "stmt_list",      "stmt stmt_list"},
+        {"R22", "stmt_list",      "ε"},
+        {"R23", "stmt",           "declaration"},
+        {"R24", "stmt",           "assignment"},
+        {"R25", "expr",           "term expr_tail"},
+        {"R26", "expr_tail",      "+ term expr_tail"},
+        {"R27", "expr_tail",      "- term expr_tail"},
+        {"R28", "expr_tail",      "ε"},
+        {"R29", "term",           "factor term_tail"},
+        {"R30", "term_tail",      "* factor term_tail"},
+        {"R31", "term_tail",      "/ factor term_tail"},
+        {"R32", "term_tail",      "ε"},
+        {"R33", "factor",         "( expr )"},
+        {"R34", "factor",         "identifier"},
+        {"R35", "factor",         "int_constant"},
+        {"R36", "factor",         "string_literal"},
+        {"R37", "identifier",     "letter ident_tail"},
+        {"R38", "ident_tail",     "letter ident_tail"},
+        {"R39", "ident_tail",     "digit ident_tail"},
+        {"R40", "ident_tail",     "_ ident_tail"},
+        {"R41", "ident_tail",     "ε"},
+        {"R42", "int_constant",   "digit digits"},
+        {"R43", "digits",         "digit digits"},
+        {"R44", "digits",         "ε"},
+        {"R45", "letter",         "a | b | … | z | A | … | Z"},
+        {"R46", "digit",          "0 | 1 | … | 9"},
+    };
+}
+
+void GrammarCoverage::resetCoverage() {
+    for (auto& r : rules) { r.used = false; r.useCount = 0; }
+    usedRuleIds.clear();
+    totalUsed = 0;
+    update();
+}
+
+void GrammarCoverage::setDerivationSteps(const std::vector<DerivationStep>& steps) {
+    resetCoverage();
+    for (const auto& step : steps)
+        markUsed(step.productionRule);
+    update();
+}
+
+void GrammarCoverage::markUsed(const std::string& productionRule) {
+    // productionRule looks like "program → preamble_opt pre_stmt_list switch_stmt"
+    // or "R1" style — match by LHS → RHS
+    QString rule = QString::fromStdString(productionRule);
+    for (auto& r : rules) {
+        QString canonical = r.lhs + " → " + r.rhs;
+        if (rule.contains(r.lhs) && rule.contains(r.rhs.split(" ").first())) {
+            r.used = true;
+            r.useCount++;
+            usedRuleIds.insert(r.id.toStdString());
+            totalUsed++;
+        }
+    }
+}
+
+void GrammarCoverage::paintEvent(QPaintEvent*) {
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::TextAntialiasing);
+
+    // Background
+    p.fillRect(rect(), QColor("#0F172A"));
+
+    const int margin  = 16;
+    const int rowH    = 34;
+    const int idW     = 44;
+    const int lhsW    = 140;
+    const int barMaxW = 120;
+    int y = margin;
+
+    // Coverage bar at top
+    int usedCount = 0;
+    for (const auto& r : rules) if (r.used) usedCount++;
+    int total = (int)rules.size();
+    qreal pct = total > 0 ? (qreal)usedCount / total : 0.0;
+
+    // Header
+    p.setFont(QFont("Segoe UI", 11, QFont::Bold));
+    p.setPen(QColor("#A78BFA"));
+    p.drawText(margin, y + 18, QString("Grammar Coverage: %1 / %2 rules used (%3%)")
+               .arg(usedCount).arg(total).arg(qRound(pct * 100)));
+    y += 30;
+
+    // Coverage progress bar
+    QRectF barBg(margin, y, width() - 2*margin, 12);
+    p.setBrush(QColor("#1E293B"));
+    p.setPen(QPen(QColor("#334155"), 1));
+    p.drawRoundedRect(barBg, 6, 6);
+
+    QRectF barFill(margin, y, (width() - 2*margin) * pct, 12);
+    QLinearGradient lg(barFill.left(), 0, barFill.right(), 0);
+    lg.setColorAt(0, QColor("#6366F1"));
+    lg.setColorAt(1, QColor("#A78BFA"));
+    p.setBrush(lg);
+    p.setPen(Qt::NoPen);
+    p.drawRoundedRect(barFill, 6, 6);
+    y += 22;
+
+    // Column headers
+    p.setFont(QFont("Segoe UI", 9, QFont::Bold));
+    p.setPen(QColor("#64748B"));
+    p.drawText(margin,           y + 14, "Rule");
+    p.drawText(margin + idW,     y + 14, "Non-terminal");
+    p.drawText(margin + idW + lhsW, y + 14, "Production");
+    p.drawText(width() - margin - barMaxW - 60, y + 14, "Uses");
+    y += 20;
+
+    // Separator
+    p.setPen(QPen(QColor("#334155"), 1));
+    p.drawLine(margin, y, width() - margin, y);
+    y += 6;
+
+    // Rules
+    for (const auto& rule : rules) {
+        QRectF rowRect(margin - 4, y, width() - 2*margin + 8, rowH - 2);
+
+        // Row background
+        if (rule.used) {
+            QLinearGradient rowGrad(rowRect.left(), 0, rowRect.right(), 0);
+            rowGrad.setColorAt(0, QColor(99, 102, 241, 25));
+            rowGrad.setColorAt(1, QColor(99, 102, 241, 5));
+            p.setBrush(rowGrad);
+            p.setPen(Qt::NoPen);
+            p.drawRoundedRect(rowRect, 4, 4);
+        }
+
+        // Rule ID badge
+        QRectF idRect(margin, y + 6, idW - 6, rowH - 14);
+        QColor idBg = rule.used ? QColor("#312E81") : QColor("#1E293B");
+        QColor idFg = rule.used ? QColor("#A5B4FC") : QColor("#475569");
+        p.setBrush(idBg);
+        p.setPen(QPen(rule.used ? QColor("#4F46E5") : QColor("#334155"), 1));
+        p.drawRoundedRect(idRect, 4, 4);
+        p.setFont(QFont("Consolas", 8, QFont::Bold));
+        p.setPen(idFg);
+        p.drawText(idRect, Qt::AlignCenter, rule.id);
+
+        // LHS
+        p.setFont(QFont("Consolas", 10, QFont::Bold));
+        p.setPen(rule.used ? QColor("#818CF8") : QColor("#475569"));
+        p.drawText(margin + idW, y + rowH/2 + 4, rule.lhs);
+
+        // Arrow + RHS
+        p.setFont(QFont("Consolas", 9));
+        p.setPen(rule.used ? QColor("#94A3B8") : QColor("#334155"));
+        QString rhs = "→  " + rule.rhs;
+        QFontMetrics fm(p.font());
+        int rhsX = margin + idW + lhsW;
+        int maxRhsW = width() - rhsX - barMaxW - 80;
+        QString rhsElided = fm.elidedText(rhs, Qt::ElideRight, maxRhsW);
+        p.drawText(rhsX, y + rowH/2 + 4, rhsElided);
+
+        // Use count + mini bar
+        if (rule.used) {
+            int barX = width() - margin - barMaxW - 50;
+            int maxUse = 20;
+            qreal barW = std::min(1.0, (qreal)rule.useCount / maxUse) * barMaxW;
+
+            QRectF miniBarBg(barX, y + rowH/2 - 4, barMaxW, 8);
+            p.setBrush(QColor("#1E293B"));
+            p.setPen(Qt::NoPen);
+            p.drawRoundedRect(miniBarBg, 4, 4);
+
+            QRectF miniBarFill(barX, y + rowH/2 - 4, barW, 8);
+            QLinearGradient mlg(miniBarFill.left(), 0, miniBarFill.right(), 0);
+            mlg.setColorAt(0, QColor("#6366F1"));
+            mlg.setColorAt(1, QColor("#A78BFA"));
+            p.setBrush(mlg);
+            p.drawRoundedRect(miniBarFill, 4, 4);
+
+            p.setFont(QFont("Consolas", 9, QFont::Bold));
+            p.setPen(QColor("#A5B4FC"));
+            p.drawText(barX + barMaxW + 6, y + rowH/2 + 4,
+                       QString("×%1").arg(rule.useCount));
+        }
+
+        // Divider
+        p.setPen(QPen(QColor("#1E293B"), 1));
+        p.drawLine(margin, y + rowH - 1, width() - margin, y + rowH - 1);
+
+        y += rowH;
+    }
+
+    setMinimumHeight(y + margin);
+}

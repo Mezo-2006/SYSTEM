@@ -1,0 +1,149 @@
+╔══════════════════════════════════════════════════════════════════╗
+║           🎨 NEW PARSE TREE - QUICK START GUIDE 🎨              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🚀 GETTING STARTED                                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. Run:  build\Release\SwitchCaseCompiler.exe                  │
+│                                                                 │
+│  2. Write your code:                                            │
+│     switch (x) {                                                │
+│         case 1: y = 10; break;                                  │
+│         case 2: y = 20; break;                                  │
+│         default: y = 0; break;                                  │
+│     }                                                           │
+│                                                                 │
+│  3. Click: [Compile] button                                     │
+│                                                                 │
+│  4. Click: "Parse Tree" tab                                     │
+│                                                                 │
+│  5. Watch: Beautiful animation! 🎬                             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ ✨ WHAT YOU'LL SEE                                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Animation Sequence (1.5 seconds):                              │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│                                                                 │
+│  ⏱ 0.0s  → Gradient background with grid appears              │
+│  ⏱ 0.3s  → Nodes start fading in from above                   │
+│  ⏱ 0.8s  → Nodes grow and slide into position                 │
+│  ⏱ 1.2s  → Edges draw with smooth curves                      │
+│  ⏱ 1.5s  → Type labels appear, animation complete             │
+│                                                                 │
+│  Visual Features:                                               │
+│  • Radial gradient nodes with 3D depth                          │
+│  • Curved Bezier edges with arrows                              │
+│  • Color-coded: Green (terminals), Blue (non-terminals)         │
+│  • Drop shadows for elevation effect                            │
+│  • Smooth animations with cubic easing                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🖱️ HOW TO INTERACT                                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  HOVER over nodes:                                              │
+│  ├─ Node highlights with brighter color                         │
+│  ├─ Border thickens (2px → 3px)                                │
+│  └─ Cursor changes to pointing hand 👆                         │
+│                                                                 │
+│  CLICK on nodes:                                                │
+│  └─ Jumps to that derivation step                              │
+│                                                                 │
+│  SCROLL wheel:                                                  │
+│  ├─ Zoom IN: Scroll up (up to 200%)                            │
+│  └─ Zoom OUT: Scroll down (down to 50%)                        │
+│                                                                 │
+│  VIEW info panel (bottom-left):                                 │
+│  └─ Shows: Nodes | Depth | Zoom level                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🎨 COLOR GUIDE                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Terminals (keywords, symbols):                                 │
+│  ╔═══════════╗                                                  │
+│  ║   case    ║  ← Green gradient with dark green border        │
+│  ║  terminal ║                                                  │
+│  ╚═══════════╝                                                  │
+│                                                                 │
+│  Non-terminals (grammar rules):                                 │
+│  ╔══════════════╗                                               │
+│  ║  switch_stmt ║  ← Blue gradient with royal blue border      │
+│  ║ non-terminal ║                                               │
+│  ╚══════════════╝                                               │
+│                                                                 │
+│  Edges (connections):                                           │
+│  Blue → Purple gradient (depth-based)                           │
+│  With arrow heads showing direction ↓                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 💡 PRO TIPS                                                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. ✨ Watch the full animation                                │
+│     Don't click away immediately - enjoy the 1.5s build!        │
+│                                                                 │
+│  2. 🔍 Zoom in for details                                     │
+│     Use mouse wheel to zoom up to 200% for better clarity       │
+│                                                                 │
+│  3. 🖱️ Hover to explore                                       │
+│     Move mouse over nodes to see them highlight                 │
+│                                                                 │
+│  4. 🎯 Click to navigate                                       │
+│     Click nodes to jump to their derivation steps               │
+│                                                                 │
+│  5. 📊 Check the info panel                                    │
+│     Bottom-left shows tree statistics                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🎬 EXAMPLE TREE STRUCTURE                                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                    ╔═══════════╗                                │
+│                    ║  program  ║                                │
+│                    ║non-terminal                                │
+│                    ╚═════╤═════╝                                │
+│                          ╎  (curved edge)                       │
+│                  ╔═══════╧═══════╗                              │
+│                  ║  switch_stmt  ║                              │
+│                  ║ non-terminal  ║                              │
+│                  ╚═══╤═══╤═══╤═══╝                              │
+│                    ╔═╧╗╔═╧╗╔═╧═╗                               │
+│                    ║( ║║id║║ ) ║                                │
+│                    ╚══╝╚══╝╚═══╝                                │
+│                  (terminals - green)                            │
+│                                                                 │
+│  Each level animated sequentially!                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 📚 LEARN MORE                                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Documentation files:                                           │
+│  • PARSE_TREE_SUMMARY.md     - Complete overview               │
+│  • PARSE_TREE_IMPROVEMENTS.md - Technical details              │
+│  • PARSE_TREE_COMPARISON.txt - Before/after visual             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════╗
+║  🎉 ENJOY YOUR PROFESSIONAL PARSE TREE VISUALIZATION! 🎉        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+       Ready to run:  build\Release\SwitchCaseCompiler.exe

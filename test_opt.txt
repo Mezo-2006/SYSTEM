@@ -1,0 +1,25 @@
+#include <iostream>
+int main() {
+    int x;
+    int y;
+    int z;
+    int w;
+    int a;
+    int b;
+    switch(x) {
+        case 1:
+            y = 5 + 5;
+            z = y * 2;
+            w = 10 / 2;
+            break;
+        case 2:
+            a = 1;
+            a = 2;
+            b = a + 3;
+            break;
+        default:
+            x = 0;
+            break;
+    }
+    return 0;
+}

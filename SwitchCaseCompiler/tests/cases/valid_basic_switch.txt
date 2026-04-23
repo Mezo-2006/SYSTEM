@@ -1,0 +1,6 @@
+int y = 0;
+switch (1) {
+  case 1: y = 3 + 2; break;
+  case 2: y = 4 * 3; break;
+  default: y = 0; break;
+}

@@ -1,0 +1,91 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                    QUICK SYNTAX REFERENCE                        ║
+║            SwitchCaseCompiler - What You Can Write               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ ❌ DON'T INCLUDE THESE (C++ specific):                         │
+├─────────────────────────────────────────────────────────────────┤
+│  • #include <iostream>                                          │
+│  • using namespace std;                                         │
+│  • int main() { }                                               │
+│  • cout << "text";                                              │
+│  • cin >> variable;                                             │
+│  • return 0;                                                    │
+│  • int x; (variable declarations)                               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ ✅ ONLY WRITE THIS:                                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  switch (variable) {                                            │
+│      case 1:                                                    │
+│          result = value1;                                       │
+│          break;                                                 │
+│      case 2:                                                    │
+│          result = value2;                                       │
+│          break;                                                 │
+│      default:                                                   │
+│          result = 0;                                            │
+│          break;                                                 │
+│  }                                                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 📝 ALLOWED IN CASE BODIES:                                     │
+├─────────────────────────────────────────────────────────────────┤
+│  • variable = number;          (simple assignment)              │
+│  • variable = x + y;           (addition)                       │
+│  • variable = x - y;           (subtraction)                    │
+│  • variable = x * y;           (multiplication)                 │
+│  • variable = x / y;           (division)                       │
+│  • variable = (x + y) * z;     (complex expressions)            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🎯 COMPLETE EXAMPLE:                                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  switch (operation) {                                           │
+│      case 1:                                                    │
+│          result = x + y;                                        │
+│          temp = result * 2;                                     │
+│          break;                                                 │
+│      case 2:                                                    │
+│          result = x - y;                                        │
+│          break;                                                 │
+│      case 3:                                                    │
+│          result = x * y;                                        │
+│          break;                                                 │
+│      default:                                                   │
+│          result = 0;                                            │
+│          break;                                                 │
+│  }                                                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 💡 WHY THESE RESTRICTIONS?                                     │
+├─────────────────────────────────────────────────────────────────┤
+│  This is an EDUCATIONAL compiler to learn:                      │
+│  • Lexical Analysis                                             │
+│  • Syntax Parsing (Rightmost Derivation)                        │
+│  • Semantic Analysis                                            │
+│  • Code Optimization                                            │
+│  • Assembly Generation                                          │
+│                                                                 │
+│  The simple grammar makes learning easier!                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔧 NEED TO RUN ACTUAL C++ CODE?                                │
+├─────────────────────────────────────────────────────────────────┤
+│  Use a standard C++ compiler:                                   │
+│  • Visual Studio (Windows)                                      │
+│  • g++ (Linux/Mac/Windows)                                      │
+│  • Online: onlinegdb.com, godbolt.org                           │
+└─────────────────────────────────────────────────────────────────┘
+
+                    📚 See COMMON_ERRORS.md for more!

@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFG Compiler Visualizer — Modern Redesign</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        /* ============================================================
+           REDESIGN: Modern Dark Theme with Semantic Colors
+           ============================================================ */
+
+        :root {
+            /* REDESIGN: Color Palette — semantic naming */
+            --bg-base: #0f1117;
+            --bg-surface: #1a1d27;
+            --bg-elevated: #22263a;
+            --bg-overlay: #2c3150;
+
+            --color-nt: #7c9ef5;       /* Non-terminals — blue */
+            --color-term: #56d4a0;     /* Terminals — teal */
+            --color-eps: #888fa8;      /* Epsilon — muted gray */
+            --color-rule: #f0a04b;     /* Rules R1–R46 — amber */
+            --color-match: #4caf82;    /* Verified match — green */
+            --color-error: #e05c6a;    /* Mismatch — red */
+            --color-active: #a78bfa;   /* Currently expanding — purple */
+            --color-arrow: #4a5480;    /* Connectors — dim blue */
+
+            --text-primary: #e8eaf2;
+            --text-secondary: #9199b8;
+            --text-muted: #555e7a;
+            --text-code: #c8d0f0;
+
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-medium: rgba(255, 255, 255, 0.12);
+            --border-strong: rgba(255, 255, 255, 0.22);
+
+            /* REDESIGN: Spacing — 4px grid */
+            --xs: 4px;
+            --sm: 8px;
+            --md: 12px;
+            --lg: 16px;
+            --xl: 24px;
+            --2xl: 32px;
+
+            /* REDESIGN: Border radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-pill: 9999px;
+
+            /* REDESIGN: Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        /* REDESIGN: Global reset and typography */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* REDESIGN: Global layout — flex container */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        /* REDESIGN: Header — clean, minimal, border-bottom only */
+        .header {
+            height: 52px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            padding: 0 var(--lg);
+            gap: var(--xl);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .header-spacer {
+            flex: 1;
+        }
+
+        .step-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--color-rule);
+            background: rgba(240, 160, 75, 0.1);
+            padding: var(--sm) var(--md);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-medium);
+        }
+
+        /* ============================================================
+           MAIN CONTENT — flex row (left panel + canvas)
+           ============================================================ */
+        /* REDESIGN: Content container */
+        .content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* REDESIGN: Left sidebar — 300px default */
+        .sidebar {
+            width: 300px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 240ms ease;
+        }
+
+        .sidebar.collapsed {
+            margin-left: -300px;
+        }
+
+        /* REDESIGN: Sidebar sections */
+        .sidebar-section {
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-section-header {
+            padding: var(--md) var(--lg);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: var(--sm);
+        }
+
+        .sidebar-section-header::before {
+            content: '▼';
+            display: inline-block;
+            transform: rotate(-90deg);
+            transition: transform 240ms ease;
+            font-size: 10px;
+        }
+
+        .sidebar-section.collapsed .sidebar-section-header::before {
+            transform: rotate(0deg);
+        }
+
+        .sidebar-section-content {
+            max-height: 500px;
+            overflow-y: auto;
+            transition: max-height 240ms ease;
+        }
+
+        .sidebar-section.collapsed .sidebar-section-content {
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        /* REDESIGN: Rule list items */
+        .rule-item {
+            padding: var(--md) var(--lg);
+            border-bottom: 1px solid var(--border-subtle);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 120ms ease;
+            color: var(--text-code);
+        }
+
+        .rule-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .rule-item.active {
+            background: var(--bg-overlay);
+            border-left: 3px solid var(--color-active);
+            padding-left: calc(var(--lg) - 3px);
+        }
+
+        .rule-number {
+            color: var(--color-rule);
+            font-weight: 600;
+            margin-right: var(--md);
+        }
+
+        .rule-arrow {
+            color: var(--text-muted);
+            margin: 0 var(--sm);
+        }
+
+        /* REDESIGN: FIRST/FOLLOW table */
+        .ff-table {
+            padding: var(--lg);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+
+        .ff-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--md);
+            padding: var(--md);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .ff-row:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ff-label {
+            color: var(--color-nt);
+            font-weight: 600;
+        }
+
+        .ff-set {
+            display: flex;
+            gap: var(--sm);
+            flex-wrap: wrap;
+        }
+
+        .ff-item {
+            display: inline-block;
+            padding: var(--xs) var(--md);
+            background: rgba(86, 212, 160, 0.1);
+            border: 1px solid var(--color-term);
+            border-radius: var(--radius-md);
+            color: var(--color-term);
+            font-size: 10px;
+        }
+
+        /* REDESIGN: Checklist */
+        .checklist {
+            padding: var(--lg);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: var(--md);
+            padding: var(--md) 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 12px;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--color-match);
+        }
+
+        .checklist-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* ============================================================
+           MAIN CANVAS — Parse Tree Visualization
+           ============================================================ */
+        /* REDESIGN: Canvas container */
+        .canvas-container {
+            flex: 1;
+            background: var(--bg-base);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* REDESIGN: SVG canvas with grid background */
+        #parseTreeSvg {
+            flex: 1;
+            background-image:
+                linear-gradient(0deg, var(--border-subtle) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0;
+            cursor: grab;
+        }
+
+        #parseTreeSvg:active {
+            cursor: grabbing;
+        }
+
+        /* REDESIGN: Parse tree nodes — non-terminal */
+        .node-nt {
+            stroke: var(--color-nt);
+            stroke-width: 1.5px;
+            fill: var(--bg-elevated);
+            transition: all 120ms ease;
+        }
+
+        .node-nt:hover {
+            stroke-width: 2px;
+            filter: brightness(1.1);
+        }
+
+        .node-nt.active {
+            fill: rgba(167, 139, 250, 0.15);
+            stroke: var(--color-active);
+            stroke-width: 2px;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        /* REDESIGN: Parse tree nodes — terminal (leaf) */
+        .node-term {
+            stroke: var(--color-term);
+            stroke-width: 1px;
+            fill: rgba(86, 212, 160, 0.1);
+            transition: all 120ms ease;
+        }
+
+        .node-term:hover {
+            filter: brightness(1.15);
+        }
+
+        /* REDESIGN: Epsilon nodes */
+        .node-eps {
+            stroke: var(--color-eps);
+            stroke-width: 1px;
+            stroke-dasharray: 4, 4;
+            fill: transparent;
+        }
+
+        /* REDESIGN: Node labels */
+        .node-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .node-nt .node-label {
+            fill: var(--color-nt);
+        }
+
+        .node-term .node-label {
+            fill: var(--color-term);
+        }
+
+        .node-eps .node-label {
+            fill: var(--color-eps);
+            font-style: italic;
+        }
+
+        /* REDESIGN: Rule badges below nodes */
+        .rule-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 600;
+            fill: var(--color-rule);
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* REDESIGN: Connector lines (curved bezier) */
+        .link {
+            stroke: var(--color-arrow);
+            stroke-width: 1.5px;
+            fill: none;
+            marker-end: url(#arrowhead);
+            transition: all 120ms ease;
+        }
+
+        .link:hover {
+            stroke: var(--color-active);
+            stroke-width: 2px;
+        }
+
+        /* REDESIGN: Arrow marker */
+        marker {
+            overflow: visible;
+        }
+
+        .arrowhead {
+            fill: var(--color-arrow);
+        }
+
+        /* REDESIGN: Canvas controls */
+        .canvas-controls {
+            position: absolute;
+            top: var(--lg);
+            right: var(--lg);
+            display: flex;
+            flex-direction: column;
+            gap: var(--sm);
+            background: var(--bg-overlay);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: var(--sm);
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 120ms ease;
+        }
+
+        .zoom-btn:hover {
+            background: var(--bg-overlay);
+            border-color: var(--border-strong);
+        }
+
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+
+        .zoom-level {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: var(--xs) var(--sm);
+        }
+
+        /* REDESIGN: Minimap */
+        .minimap {
+            position: absolute;
+            bottom: var(--lg);
+            right: var(--lg);
+            width: 100px;
+            height: 60px;
+            background: var(--bg-overlay);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            z-index: 5;
+        }
+
+        /* REDESIGN: Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .node {
+            animation: fadeIn 180ms ease-out;
+        }
+
+        /* ============================================================
+           BOTTOM PANEL — Derivation Steps + Input
+           ============================================================ */
+        /* REDESIGN: Bottom panel container */
+        .bottom-panel {
+            height: 220px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            transition: height 240ms ease;
+        }
+
+        .bottom-panel.expanded {
+            height: 380px;
+        }
+
+        /* REDESIGN: Derivation steps list */
+        .derivation-steps {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: var(--lg);
+        }
+
+        .step-row {
+            display: grid;
+            grid-template-columns: 32px 90px 1fr;
+            gap: var(--md);
+            padding: var(--md) var(--lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--md);
+            border-left: 2px solid transparent;
+            transition: all 120ms ease;
+            cursor: pointer;
+            align-items: center;
+        }
+
+        .step-row:hover {
+            background: var(--bg-elevated);
+        }
+
+        .step-row.active {
+            background: var(--bg-overlay);
+            border-left-color: var(--color-active);
+        }
+
+        .step-number {
+            color: var(--color-rule);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .step-rule {
+            display: inline-block;
+            padding: var(--xs) var(--md);
+            background: rgba(240, 160, 75, 0.1);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--radius-md);
+            color: var(--color-rule);
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .step-form {
+            color: var(--text-code);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .step-form .nt {
+            color: var(--color-nt);
+            font-weight: 600;
+        }
+
+        .step-form .term {
+            color: var(--color-term);
+        }
+
+        .step-form .rhs {
+            color: var(--text-secondary);
+        }
+
+        /* REDESIGN: Input bar and token strip */
+        .input-section {
+            padding: var(--lg);
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-base);
+        }
+
+        .input-bar {
+            display: flex;
+            gap: var(--md);
+            margin-bottom: var(--md);
+        }
+
+        .input-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(124, 158, 245, 0.1);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            color: var(--color-nt);
+            font-weight: 600;
+        }
+
+        #sourceInput {
+            flex: 1;
+            padding: var(--md);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            color: var(--text-code);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: border-color 120ms ease;
+        }
+
+        #sourceInput:focus {
+            outline: none;
+            border-color: var(--color-active);
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.1);
+        }
+
+        #sourceInput::placeholder {
+            color: var(--text-muted);
+        }
+
+        .parse-btn {
+            padding: var(--md) var(--lg);
+            background: var(--color-active);
+            border: none;
+            border-radius: var(--radius-pill);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 120ms ease;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .parse-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .parse-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* REDESIGN: Token strip */
+        .token-strip {
+            display: flex;
+            gap: var(--sm);
+            flex-wrap: wrap;
+            padding: var(--md) 0;
+            max-height: 40px;
+            overflow-y: auto;
+        }
+
+        .token {
+            display: inline-block;
+            padding: var(--xs) var(--md);
+            border-radius: var(--radius-md);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid;
+            white-space: nowrap;
+            animation: fadeIn 40ms ease-out;
+        }
+
+        .token.keyword {
+            background: rgba(240, 160, 75, 0.1);
+            border-color: var(--color-rule);
+            color: var(--color-rule);
+        }
+
+        .token.identifier {
+            background: rgba(124, 158, 245, 0.1);
+            border-color: var(--color-nt);
+            color: var(--color-nt);
+        }
+
+        .token.operator {
+            background: rgba(85, 94, 122, 0.2);
+            border-color: var(--text-muted);
+            color: var(--text-muted);
+        }
+
+        .token.literal {
+            background: rgba(86, 212, 160, 0.1);
+            border-color: var(--color-term);
+            color: var(--color-term);
+        }
+
+        /* REDESIGN: Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-surface);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-strong);
+        }
+
+        /* REDESIGN: Accessibility */
+        *:focus-visible {
+            outline: 2px solid var(--color-active);
+            outline-offset: 2px;
+        }
+
+        /* Respect prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- REDESIGN: Main app container -->
+    <div id="app">
+        <!-- REDESIGN: Header -->
+        <div class="header">
+            <div>
+                <div class="header-title">CFG Compiler</div>
+                <div class="header-subtitle">LL(1) Switch-Case Visualizer</div>
+            </div>
+            <div class="header-spacer"></div>
+            <div class="step-counter">
+                Step <span id="stepCount">0</span> / <span id="stepTotal">0</span>
+            </div>
+        </div>
+
+        <!-- REDESIGN: Main content (left sidebar + canvas) -->
+        <div class="content">
+            <!-- REDESIGN: Left sidebar -->
+            <div class="sidebar" id="sidebar">
+                <!-- Grammar rules section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-header">Production Rules</div>
+                    <div class="sidebar-section-content">
+                        <div id="ruleList"></div>
+                    </div>
+                </div>
+
+                <!-- FIRST/FOLLOW section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-header">FIRST / FOLLOW Sets</div>
+                    <div class="sidebar-section-content">
+                        <div class="ff-table" id="ffTable"></div>
+                    </div>
+                </div>
+
+                <!-- Completeness checklist -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-header">Completeness</div>
+                    <div class="sidebar-section-content">
+                        <div class="checklist" id="checklist"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REDESIGN: Main canvas -->
+            <div class="canvas-container">
+                <svg id="parseTreeSvg"></svg>
+                <defs id="svgDefs"></defs>
+
+                <!-- REDESIGN: Canvas controls (zoom) -->
+                <div class="canvas-controls">
+                    <button class="zoom-btn" title="Zoom In" id="zoomInBtn">+</button>
+                    <button class="zoom-btn" title="Reset" id="zoomResetBtn">⊙</button>
+                    <button class="zoom-btn" title="Zoom Out" id="zoomOutBtn">−</button>
+                    <div class="zoom-level" id="zoomLevel">100%</div>
+                </div>
+
+                <!-- Minimap placeholder -->
+                <svg class="minimap" id="minimap"></svg>
+            </div>
+        </div>
+
+        <!-- REDESIGN: Bottom panel (derivation steps + input) -->
+        <div class="bottom-panel" id="bottomPanel">
+            <div class="derivation-steps" id="derivationSteps"></div>
+            
+            <div class="input-section">
+                <div class="input-bar">
+                    <div class="input-icon">{ }</div>
+                    <input 
+                        type="text" 
+                        id="sourceInput" 
+                        placeholder="Enter a C++ switch-case program (or paste your code)…"
+                        value="int z = 0; switch ( 1 ) { case 1: z = 42; break; default: z = 0; break; }"
+                    >
+                    <button class="parse-btn" id="parseBtn">Parse</button>
+                </div>
+                <div class="token-strip" id="tokenStrip"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* REDESIGN: Interactive Parse Tree Visualization with D3.js */
+
+        // Sample derivation data (in real app, comes from C++ parser)
+        const sampleDerivation = [
+            { step: 1, rule: 'R1', form: 'program', nt: 'program' },
+            { step: 2, rule: 'R2', form: 'preamble_opt pre_stmt_list switch_stmt', nt: 'preamble_opt' },
+            { step: 3, rule: 'R4', form: 'ε pre_stmt_list switch_stmt', nt: 'ε' },
+            { step: 4, rule: 'R6', form: 'ε ε switch_stmt', nt: 'pre_stmt_list' },
+            { step: 5, rule: 'R15', form: 'ε ε switch ( expr ) { case_list default_clause }', nt: 'switch_stmt' },
+        ];
+
+        const sampleParseTree = {
+            name: 'program',
+            type: 'nt',
+            rule: 'R1',
+            children: [
+                {
+                    name: 'preamble_opt',
+                    type: 'nt',
+                    rule: 'R4',
+                    children: [{ name: 'ε', type: 'eps', rule: null }]
+                },
+                {
+                    name: 'pre_stmt_list',
+                    type: 'nt',
+                    rule: 'R6',
+                    children: [{ name: 'ε', type: 'eps', rule: null }]
+                },
+                {
+                    name: 'switch_stmt',
+                    type: 'nt',
+                    rule: 'R15',
+                    children: [
+                        { name: 'switch', type: 'term', rule: null },
+                        { name: '(', type: 'term', rule: null },
+                        {
+                            name: 'expr',
+                            type: 'nt',
+                            rule: 'R25',
+                            children: [
+                                {
+                                    name: 'term',
+                                    type: 'nt',
+                                    rule: 'R29',
+                                    children: [
+                                        {
+                                            name: 'factor',
+                                            type: 'nt',
+                                            rule: 'R35',
+                                            children: [
+                                                { name: '1', type: 'term', rule: null }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    name: 'expr_tail',
+                                    type: 'nt',
+                                    rule: 'R28',
+                                    children: [{ name: 'ε', type: 'eps', rule: null }]
+                                }
+                            ]
+                        },
+                        { name: ')', type: 'term', rule: null },
+                        { name: '{', type: 'term', rule: null },
+                        {
+                            name: 'case_list',
+                            type: 'nt',
+                            rule: 'R16',
+                            children: [
+                                {
+                                    name: 'case_clause',
+                                    type: 'nt',
+                                    rule: 'R18',
+                                    children: [
+                                        { name: 'case', type: 'term', rule: null },
+                                        { name: '1', type: 'term', rule: null },
+                                        { name: ':', type: 'term', rule: null },
+                                        {
+                                            name: 'stmt_list',
+                                            type: 'nt',
+                                            rule: 'R22',
+                                            children: [{ name: 'ε', type: 'eps', rule: null }]
+                                        },
+                                        { name: 'break', type: 'term', rule: null },
+                                        { name: ';', type: 'term', rule: null }
+                                    ]
+                                },
+                                {
+                                    name: 'case_list',
+                                    type: 'nt',
+                                    rule: 'R17',
+                                    children: [{ name: 'ε', type: 'eps', rule: null }]
+                                }
+                            ]
+                        },
+                        {
+                            name: 'default_clause',
+                            type: 'nt',
+                            rule: 'R20',
+                            children: [{ name: 'ε', type: 'eps', rule: null }]
+                        },
+                        { name: '}', type: 'term', rule: null }
+                    ]
+                }
+            ]
+        };
+
+        const sampleRules = [
+            'R1  program → preamble_opt pre_stmt_list switch_stmt',
+            'R2  preamble_opt → using_opt',
+            'R3  using_opt → using namespace std ;',
+            'R4  using_opt → ε',
+            'R5  pre_stmt_list → pre_stmt pre_stmt_list',
+            'R6  pre_stmt_list → ε',
+            'R7  pre_stmt → declaration',
+            'R8  pre_stmt → assignment',
+            'R15 switch_stmt → switch ( expr ) { case_list default_clause }',
+            'R25 expr → term expr_tail',
+            'R28 expr_tail → ε',
+            'R29 term → factor term_tail',
+            'R35 factor → int_constant',
+        ];
+
+        const sampleFFSets = [
+            { nt: 'expr', first: ['(', 'id', 'const'], follow: [')', ';'] },
+            { nt: 'term', first: ['(', 'id', 'const'], follow: ['+', '-', ')', ';'] },
+            { nt: 'factor', first: ['(', 'id', 'const'], follow: ['*', '/', '+', '-', ')', ';'] },
+        ];
+
+        // State
+        let currentStep = 0;
+        let zoomScale = 1;
+        let panX = 0, panY = 0;
+
+        // Initialize sidebar rule list
+        function initRuleList() {
+            const ruleList = document.getElementById('ruleList');
+            sampleRules.forEach((rule, idx) => {
+                const item = document.createElement('div');
+                item.className = 'rule-item';
+                if (idx % 3 === 0) item.classList.add('active');
+                item.innerHTML = `<span class="rule-number">${rule.substring(0, 3)}</span><span class="rule-arrow">→</span><span>${rule.substring(6)}</span>`;
+                ruleList.appendChild(item);
+            });
+        }
+
+        // Initialize FIRST/FOLLOW table
+        function initFFTable() {
+            const table = document.getElementById('ffTable');
+            sampleFFSets.forEach(row => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'ff-row';
+                const first = row.first.map(t => `<span class="ff-item">${t}</span>`).join('');
+                const follow = row.follow.map(t => `<span class="ff-item">${t}</span>`).join('');
+                rowEl.innerHTML = `
+                    <div><span class="ff-label">${row.nt}</span></div>
+                    <div class="ff-set">${first} | ${follow}</div>
+                `;
+                table.appendChild(rowEl);
+            });
+        }
+
+        // Initialize checklist
+        function initChecklist() {
+            const checks = [
+                '#include lines derived correctly',
+                'main() wrapper derived correctly',
+                'switch-case structure complete',
+                'Reconstructed expression identical to input'
+            ];
+            const checklist = document.getElementById('checklist');
+            checks.forEach((check, idx) => {
+                const item = document.createElement('div');
+                item.className = 'checklist-item';
+                const id = `check-${idx}`;
+                item.innerHTML = `
+                    <input type="checkbox" id="${id}">
+                    <label for="${id}">${check}</label>
+                `;
+                checklist.appendChild(item);
+            });
+        }
+
+        // Initialize derivation steps
+        function initDerivationSteps() {
+            const stepsDiv = document.getElementById('derivationSteps');
+            sampleDerivation.forEach((step, idx) => {
+                const row = document.createElement('div');
+                row.className = 'step-row';
+                if (idx === currentStep) row.classList.add('active');
+                row.innerHTML = `
+                    <div class="step-number">${step.step}</div>
+                    <div class="step-rule">apply ${step.rule}</div>
+                    <div class="step-form">
+                        ${step.form.replace(/(\w+)/g, (match) => {
+                            if (['switch', 'case', 'break', 'default'].includes(match)) {
+                                return `<span class="term">${match}</span>`;
+                            } else if (match.startsWith('ε')) {
+                                return `<span class="term">ε</span>`;
+                            } else {
+                                return `<span class="nt">${match}</span>`;
+                            }
+                        })}
+                    </div>
+                `;
+                row.onclick = () => jumpToStep(idx);
+                stepsDiv.appendChild(row);
+            });
+        }
+
+        // Jump to derivation step
+        function jumpToStep(step) {
+            currentStep = step;
+            updateDerivationView();
+        }
+
+        // Update derivation view
+        function updateDerivationView() {
+            const steps = document.querySelectorAll('.step-row');
+            steps.forEach((s, idx) => {
+                s.classList.toggle('active', idx === currentStep);
+            });
+            document.getElementById('stepCount').textContent = currentStep + 1;
+            document.getElementById('stepTotal').textContent = sampleDerivation.length;
+        }
+
+        // Initialize token strip
+        function initTokenStrip() {
+            const input = document.getElementById('sourceInput').value;
+            const tokens = tokenize(input);
+            const strip = document.getElementById('tokenStrip');
+            strip.innerHTML = '';
+            tokens.forEach((token, idx) => {
+                const pill = document.createElement('div');
+                pill.className = `token ${token.type}`;
+                pill.textContent = token.lexeme;
+                pill.style.animationDelay = `${idx * 40}ms`;
+                strip.appendChild(pill);
+            });
+        }
+
+        // Tokenize input (mock)
+        function tokenize(input) {
+            const keywords = ['int', 'switch', 'case', 'default', 'break', 'return', 'using', 'namespace', 'std', 'main'];
+            const operators = ['+', '-', '*', '/', '=', '(', ')', '{', '}', ':', ';', '<', '>', '#', '.', ','];
+            const tokens = [];
+
+            let current = '';
+            for (let i = 0; i < input.length; i++) {
+                const char = input[i];
+                if (/\s/.test(char)) {
+                    if (current) {
+                        tokens.push(classifyToken(current, keywords, operators));
+                        current = '';
+                    }
+                } else if (operators.includes(char)) {
+                    if (current) {
+                        tokens.push(classifyToken(current, keywords, operators));
+                        current = '';
+                    }
+                    tokens.push({
+                        lexeme: char,
+                        type: 'operator'
+                    });
+                } else {
+                    current += char;
+                }
+            }
+            if (current) {
+                tokens.push(classifyToken(current, keywords, operators));
+            }
+            return tokens;
+        }
+
+        function classifyToken(text, keywords, operators) {
+            if (keywords.includes(text)) {
+                return { lexeme: text, type: 'keyword' };
+            } else if (/^\d+$/.test(text)) {
+                return { lexeme: text, type: 'literal' };
+            } else {
+                return { lexeme: text, type: 'identifier' };
+            }
+        }
+
+        // Draw parse tree with D3
+        function drawParseTree() {
+            const svg = d3.select('#parseTreeSvg');
+            const width = svg.node().clientWidth;
+            const height = svg.node().clientHeight;
+
+            svg.selectAll('*').remove();
+
+            // Add defs for arrowhead
+            const defs = svg.append('defs');
+            defs.append('marker')
+                .attr('id', 'arrowhead')
+                .attr('markerWidth', 10)
+                .attr('markerHeight', 10)
+                .attr('refX', 8)
+                .attr('refY', 3)
+                .attr('orient', 'auto')
+                .append('polygon')
+                .attr('points', '0 0, 10 3, 0 6')
+                .attr('class', 'arrowhead');
+
+            // Create hierarchy
+            const root = d3.hierarchy(sampleParseTree);
+            const treeLayout = d3.tree().size([width - 100, height - 100]);
+            treeLayout(root);
+
+            // Shift coordinates
+            root.each(d => {
+                d.x += 50;
+                d.y += 50;
+            });
+
+            const g = svg.append('g')
+                .attr('transform', `translate(${panX}, ${panY}) scale(${zoomScale})`);
+
+            // Draw links
+            g.selectAll('.link')
+                .data(root.links())
+                .enter()
+                .append('path')
+                .attr('class', 'link')
+                .attr('d', d3.linkVertical()
+                    .x(d => d.x)
+                    .y(d => d.y));
+
+            // Draw nodes
+            const nodeGroups = g.selectAll('.node')
+                .data(root.descendants())
+                .enter()
+                .append('g')
+                .attr('class', 'node')
+                .attr('transform', d => `translate(${d.x}, ${d.y})`);
+
+            // Node shapes
+            nodeGroups.append('rect')
+                .attr('class', d => {
+                    if (d.data.type === 'eps') return 'node-eps';
+                    if (d.data.type === 'term') return 'node-term';
+                    return 'node-nt';
+                })
+                .attr('x', -40)
+                .attr('y', -16)
+                .attr('width', 80)
+                .attr('height', 32)
+                .attr('rx', d => d.data.type === 'term' ? 16 : 8);
+
+            // Node labels
+            nodeGroups.append('text')
+                .attr('class', 'node-label')
+                .attr('dy', '0.3em')
+                .text(d => d.data.name);
+
+            // Rule badges
+            nodeGroups.filter(d => d.data.rule)
+                .append('text')
+                .attr('class', 'rule-badge')
+                .attr('y', 28)
+                .text(d => d.data.rule);
+
+            // Interactivity
+            nodeGroups.on('click', (event, d) => {
+                nodeGroups.classed('active', false);
+                d3.select(event.currentTarget).classed('active', true);
+            });
+        }
+
+        // Zoom controls
+        document.getElementById('zoomInBtn').onclick = () => {
+            zoomScale = Math.min(zoomScale * 1.2, 3);
+            updateZoomLevel();
+            drawParseTree();
+        };
+
+        document.getElementById('zoomOutBtn').onclick = () => {
+            zoomScale = Math.max(zoomScale / 1.2, 0.3);
+            updateZoomLevel();
+            drawParseTree();
+        };
+
+        document.getElementById('zoomResetBtn').onclick = () => {
+            zoomScale = 1;
+            panX = 0;
+            panY = 0;
+            updateZoomLevel();
+            drawParseTree();
+        };
+
+        function updateZoomLevel() {
+            document.getElementById('zoomLevel').textContent = Math.round(zoomScale * 100) + '%';
+        }
+
+        // Parse button
+        document.getElementById('parseBtn').onclick = () => {
+            initTokenStrip();
+            currentStep = 0;
+            updateDerivationView();
+        }
+
+        // Sidebar collapse toggle
+        document.querySelectorAll('.sidebar-section-header').forEach(header => {
+            header.onclick = (e) => {
+                e.currentTarget.closest('.sidebar-section').classList.toggle('collapsed');
+            };
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            initRuleList();
+            initFFTable();
+            initChecklist();
+            initDerivationSteps();
+            initTokenStrip();
+            drawParseTree();
+            updateZoomLevel();
+        });
+    </script>
+</body>
+</html>

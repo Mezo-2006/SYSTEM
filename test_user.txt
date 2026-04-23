@@ -1,0 +1,32 @@
+#include <iostream>
+using namespace std;
+
+int main() {
+    int choice;
+
+    cout << "Menu:\n";
+    cout << "1. Say Hello\n";
+    cout << "2. Show Number\n";
+    cout << "3. Exit\n";
+    cout << "Enter your choice: ";
+    cin >> choice;
+
+    switch(choice) {
+        case 1:
+            cout << "Hello, Mezo!" << endl;
+            break;
+
+        case 2:
+            cout << "Your number is 42" << endl;
+            break;
+
+        case 3:
+            cout << "Exiting program..." << endl;
+            break;
+
+        default:
+            cout << "Invalid choice!" << endl;
+    }
+
+    return 0;
+}

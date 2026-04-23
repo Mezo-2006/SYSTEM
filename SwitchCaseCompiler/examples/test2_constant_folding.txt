@@ -1,0 +1,9 @@
+// TEST CASE 2: Constant Folding Example
+// This will show optimization: 3 + 4 becomes 7
+
+switch (value) {
+  case 1: y = 3 + 4; break;
+  case 2: z = 5 * 2; break;
+  case 3: a = 10 - 3; break;
+  default: result = 0; break;
+}

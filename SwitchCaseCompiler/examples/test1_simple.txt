@@ -1,0 +1,8 @@
+// TEST CASE 1: Simple Switch-Case
+// Copy and paste this into the Source Editor tab, then click COMPILE
+
+switch (x) {
+  case 1: y = x + 2; break;
+  case 2: y = x * 3; break;
+  default: y = 0; break;
+}

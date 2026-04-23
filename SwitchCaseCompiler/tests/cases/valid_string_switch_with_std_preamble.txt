@@ -1,0 +1,23 @@
+#include <string>
+using namespace std;
+
+string z;
+int state = 2;
+
+switch (state) {
+    case 1:
+        z = "IDLE";
+        break;
+
+    case 2:
+        z = "RUNNING";
+        break;
+
+    case 3:
+        z = "STOPPED";
+        break;
+
+    default:
+        z = "UNKNOWN";
+        break;
+}

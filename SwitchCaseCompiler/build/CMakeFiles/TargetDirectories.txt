@@ -1,0 +1,4 @@
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build/CMakeFiles/SwitchCaseCompiler.dir
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build/CMakeFiles/SwitchCaseCompilerCLI.dir
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/systems 2/SwitchCaseCompiler/build/CMakeFiles/ZERO_CHECK.dir
