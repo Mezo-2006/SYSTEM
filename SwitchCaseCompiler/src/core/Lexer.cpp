@@ -193,10 +193,9 @@ Token Lexer::scanIdentifierOrKeyword() {
     auto it = keywords.find(identifier);
     if (it != keywords.end()) {
         type = it->second;
-    } else {
-        // Add to symbol table
-        addToSymbolTable(identifier, "identifier");
     }
+    // Note: We don't add identifiers to symbol table here anymore
+    // Symbol table is managed by semantic analyzer
     
     Token token(type, identifier, startLine, startCol);
     return token;

@@ -28,6 +28,9 @@ private:
     std::vector<TACInstruction> constantFolding(const std::vector<TACInstruction>& code);
     std::vector<TACInstruction> deadCodeElimination(const std::vector<TACInstruction>& code);
     std::vector<TACInstruction> commonSubexpressionElimination(const std::vector<TACInstruction>& code);
+    std::vector<TACInstruction> algebraicSimplification(const std::vector<TACInstruction>& code);
+    std::vector<TACInstruction> copyPropagation(const std::vector<TACInstruction>& code);
+    std::vector<TACInstruction> strengthReduction(const std::vector<TACInstruction>& code);
     
     // Helper methods
     bool isConstant(const std::string& str);
@@ -48,9 +51,13 @@ public:
     void optimizeConstantFolding(bool enabled);
     void optimizeDeadCode(bool enabled);
     void optimizeCSE(bool enabled);
+    void optimizeAlgebraicSimplification(bool enabled);
+    void optimizeCopyPropagation(bool enabled);
+    void optimizeStrengthReduction(bool enabled);
     
     // Apply all enabled optimizations
-    std::vector<TACInstruction> optimize(bool constFold, bool deadCode, bool cse);
+    std::vector<TACInstruction> optimize(bool constFold, bool deadCode, bool cse, 
+                                       bool algebraic = true, bool copyProp = true, bool strengthRed = true);
     
     const std::vector<TACInstruction>& getInstructions() const { return instructions; }
     const std::vector<OptimizationResult>& getOptimizationResults() const { 

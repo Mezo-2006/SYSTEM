@@ -42,6 +42,8 @@ set(GUI_SOURCES
     src/gui/DerivationViewer.cpp
     src/gui/ParseTreeView.cpp
     src/gui/ASTView.cpp
+    src/gui/IRFlowDiagram.cpp
+    src/gui/PerformanceMetrics.cpp
     src/gui/ThreeColumnView.cpp
     src/gui/OptimizationPanel.cpp
     src/gui/OptimizationDiff.cpp
@@ -62,6 +64,8 @@ set(GUI_HEADERS
     src/gui/DerivationViewer.h
     src/gui/ParseTreeView.h
     src/gui/ASTView.h
+    src/gui/IRFlowDiagram.h
+    src/gui/PerformanceMetrics.h
     src/gui/ThreeColumnView.h
     src/gui/OptimizationPanel.h
     src/gui/OptimizationDiff.h

@@ -3,6 +3,7 @@
 // ScopedSymbolTable implementation
 ScopedSymbolTable::ScopedSymbolTable() : currentScope(0) {
     scopes.push_back(std::map<std::string, Symbol>());  // Global scope
+    declarationHistory.clear();
 }
 
 void ScopedSymbolTable::enterScope() {
@@ -25,6 +26,7 @@ bool ScopedSymbolTable::declare(const std::string& name, const std::string& type
     }
     
     scopes[currentScope][name] = Symbol(name, type, currentScope, line, col);
+    declarationHistory.emplace_back(name, type, "uninitialized", currentScope, line, col);
     return true;
 }
 
@@ -47,6 +49,12 @@ void ScopedSymbolTable::setInitialized(const std::string& name) {
     Symbol* sym = lookup(name);
     if (sym) {
         sym->initialized = true;
+        for (auto it = declarationHistory.rbegin(); it != declarationHistory.rend(); ++it) {
+            if (it->name == sym->name && it->scope == sym->scopeLevel) {
+                it->value = "initialized";
+                break;
+            }
+        }
     }
 }
 
@@ -69,7 +77,104 @@ bool SemanticAnalyzer::analyze(Program* program) {
         program->accept(this);
     }
     
-    return !hasErrors();
+    return errors.empty();
+}
+
+bool SemanticAnalyzer::analyze(TranslationUnit* tu) {
+    // Each compile must start from a clean semantic environment.
+    symbolTable = ScopedSymbolTable();
+    errors.clear();
+    usedCaseValues.clear();
+    afterBreak = false;
+    
+    if (tu) {
+        tu->accept(this);
+    }
+    
+    return errors.empty();
+}
+
+// New visitor implementations
+void SemanticAnalyzer::visit(TranslationUnit* node) {
+    if (node->mainFunction) {
+        node->mainFunction->accept(this);
+    }
+}
+
+void SemanticAnalyzer::visit(FunctionDecl* node) {
+    symbolTable.enterScope();
+    if (node->body) {
+        node->body->accept(this);
+    }
+    symbolTable.exitScope();
+}
+
+void SemanticAnalyzer::visit(CompoundStmt* node) {
+    for (auto& stmt : node->statements) {
+        stmt->accept(this);
+    }
+}
+
+void SemanticAnalyzer::visit(DeclStmt* node) {
+    if (node->declaration) {
+        node->declaration->accept(this);
+    }
+}
+
+void SemanticAnalyzer::visit(VarDecl* node) {
+    if (!symbolTable.declare(node->name, node->type, node->line, node->column)) {
+        addError("Variable '" + node->name + "' is already declared in this scope",
+                node->line, node->column, "duplicate_declaration");
+    }
+    
+    if (node->initializer) {
+        node->initializer->accept(this);
+        symbolTable.setInitialized(node->name);
+    }
+}
+
+void SemanticAnalyzer::visit(DeclRefExpr* node) {
+    if (!symbolTable.isDeclared(node->name)) {
+        addError("Undeclared variable '" + node->name + "'",
+                node->line, node->column, "undeclared");
+    } else if (!symbolTable.isInitialized(node->name)) {
+        addError("Variable '" + node->name + "' used before initialization",
+                node->line, node->column, "uninitialized");
+    }
+}
+
+void SemanticAnalyzer::visit(IntegerLiteral* node) {
+    // Literals are always valid
+}
+
+void SemanticAnalyzer::visit(BreakStmt* node) {
+    afterBreak = true;
+}
+
+void SemanticAnalyzer::visit(ReturnStmt* node) {
+    if (node->returnValue) {
+        node->returnValue->accept(this);
+    }
+    afterBreak = true;
+}
+
+void SemanticAnalyzer::visit(CaseStmt* node) {
+    if (!node->isDefault) {
+        if (usedCaseValues.find(node->caseValue) != usedCaseValues.end()) {
+            addError("Duplicate case value: " + std::to_string(node->caseValue),
+                    node->line, node->column, "duplicate_case");
+        }
+        usedCaseValues.insert(node->caseValue);
+    }
+    
+    afterBreak = false;
+    for (auto& stmt : node->statements) {
+        if (afterBreak) {
+            addError("Unreachable code after break/return",
+                    stmt->line, stmt->column, "unreachable");
+        }
+        stmt->accept(this);
+    }
 }
 
 void SemanticAnalyzer::addError(const std::string& message, int line, int col, 

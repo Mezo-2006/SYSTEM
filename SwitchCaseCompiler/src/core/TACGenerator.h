@@ -64,11 +64,24 @@ public:
     TACGenerator();
     
     std::vector<TACInstruction> generate(Program* program);
+    std::vector<TACInstruction> generate(TranslationUnit* tu);
     const std::vector<TACInstruction>& getInstructions() const { return instructions; }
     
     void reset();
     
-    // Visitor methods
+    // New visitor methods
+    void visit(TranslationUnit* node) override;
+    void visit(FunctionDecl* node) override;
+    void visit(CompoundStmt* node) override;
+    void visit(DeclStmt* node) override;
+    void visit(VarDecl* node) override;
+    void visit(DeclRefExpr* node) override;
+    void visit(IntegerLiteral* node) override;
+    void visit(BreakStmt* node) override;
+    void visit(ReturnStmt* node) override;
+    void visit(CaseStmt* node) override;
+    
+    // Legacy visitor methods
     void visit(Program* node) override;
     void visit(SwitchStatement* node) override;
     void visit(CaseClause* node) override;

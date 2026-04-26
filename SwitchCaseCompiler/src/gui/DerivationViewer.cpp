@@ -5,6 +5,10 @@
 #include <QTextCursor>
 #include <QTextCharFormat>
 #include <QSignalBlocker>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QFile>
+#include <QTextStream>
 
 DerivationViewer::DerivationViewer(QWidget* parent) 
     : QWidget(parent), currentStep(0), isPlaying(false) {
@@ -116,14 +120,15 @@ void DerivationViewer::setupUI() {
     stepBackButton = new QPushButton("◀ Step Back");
     stepForwardButton = new QPushButton("Step Forward ▶");
     autoPlayButton = new QPushButton("▶ Auto Play");
-
     jumpToEndButton = new QPushButton("End ▶|");
+    exportRulesButton = new QPushButton("💾 Export Rules");
 
     controlLayout->addWidget(jumpToStartButton);
     controlLayout->addWidget(stepBackButton);
     controlLayout->addWidget(stepForwardButton);
     controlLayout->addWidget(autoPlayButton);
     controlLayout->addWidget(jumpToEndButton);
+    controlLayout->addWidget(exportRulesButton);
 
     detailsLayout->addLayout(controlLayout);
 
@@ -161,6 +166,7 @@ void DerivationViewer::setupUI() {
     connect(stepListWidget, &QListWidget::currentRowChanged, this, &DerivationViewer::onStepSelected);
     connect(stepByStepModeCheck, &QCheckBox::toggled, this, &DerivationViewer::onStepModeToggled);
     connect(stepScrubber, &QSlider::valueChanged, this, &DerivationViewer::onStepScrubberMoved);
+    connect(exportRulesButton, &QPushButton::clicked, this, &DerivationViewer::onExportRules);
 
     connect(jumpToStartButton, &QPushButton::clicked, this, [this]() {
         goToStep(0);
@@ -412,4 +418,31 @@ void DerivationViewer::updateControlStates() {
     autoPlayButton->setEnabled(hasSteps);
     stepListWidget->setEnabled(hasSteps);
     stepScrubber->setEnabled(hasSteps);
+    exportRulesButton->setEnabled(hasSteps);
+}
+
+void DerivationViewer::onExportRules() {
+    if (steps.empty()) return;
+    
+    QString fileName = QFileDialog::getSaveFileName(this, "Export Derivation Rules", "", "Text Files (*.txt);;All Files (*)");
+    if (fileName.isEmpty()) return;
+    
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, "Export Error", "Could not open file for writing:\n" + file.errorString());
+        return;
+    }
+    
+    QTextStream out(&file);
+    out << "Rightmost Derivation Rules Applied:\n";
+    out << "=================================\n\n";
+    
+    for (size_t i = 0; i < steps.size(); ++i) {
+        if (!steps[i].productionRule.empty()) {
+            out << QString::number(i + 1) << ". " << QString::fromStdString(steps[i].productionRule) << "\n";
+        }
+    }
+    
+    file.close();
+    QMessageBox::information(this, "Export Successful", "The derivation rules have been exported successfully to:\n" + fileName);
 }

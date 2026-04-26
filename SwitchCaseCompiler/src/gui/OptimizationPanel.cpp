@@ -49,10 +49,21 @@ void OptimizationPanel::setupUI() {
     deadCodeCheckbox->setChecked(true);
     cseCheckbox = new QCheckBox("🔄 Common Subexpression Elimination");
     cseCheckbox->setChecked(true);
+    
+    // Add new optimization checkboxes
+    algebraicCheckbox = new QCheckBox("🔢 Algebraic Simplification");
+    algebraicCheckbox->setChecked(true);
+    copyPropCheckbox = new QCheckBox("📋 Copy Propagation");
+    copyPropCheckbox->setChecked(true);
+    strengthReductionCheckbox = new QCheckBox("💪 Strength Reduction");
+    strengthReductionCheckbox->setChecked(true);
 
     controlLayout->addWidget(constantFoldingCheckbox);
     controlLayout->addWidget(deadCodeCheckbox);
     controlLayout->addWidget(cseCheckbox);
+    controlLayout->addWidget(algebraicCheckbox);
+    controlLayout->addWidget(copyPropCheckbox);
+    controlLayout->addWidget(strengthReductionCheckbox);
     controlLayout->addStretch();
 
     mainLayout->addWidget(controlGroup);
@@ -216,4 +227,15 @@ void OptimizationPanel::displayResults() {
             beforeTable->setItem(bRow++, 0, new QTableWidgetItem(""));
         }
     }
+}
+bool OptimizationPanel::isAlgebraicSimplificationEnabled() const {
+    return algebraicCheckbox && algebraicCheckbox->isChecked();
+}
+
+bool OptimizationPanel::isCopyPropagationEnabled() const {
+    return copyPropCheckbox && copyPropCheckbox->isChecked();
+}
+
+bool OptimizationPanel::isStrengthReductionEnabled() const {
+    return strengthReductionCheckbox && strengthReductionCheckbox->isChecked();
 }

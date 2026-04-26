@@ -134,24 +134,33 @@ void CodeEditor::highlightErrorLine()
     // Create extra selections for error underlining
     QList<QTextEdit::ExtraSelection> extraSelections;
 
-    // Highlight lines with errors (more prominent)
     for (const auto& error : errors) {
-        QTextEdit::ExtraSelection selection;
-        selection.format.setBackground(QColor(255, 0, 0, 30));  // Deeper transparent red
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-
         QTextBlock block = document()->findBlockByNumber(error.line - 1);
-        selection.cursor = QTextCursor(block);
-        extraSelections.append(selection);
+        if (!block.isValid()) {
+            continue;
+        }
 
-        // Underline specific error position with a more noticeable style
+        // Underline specific error position and keep selection inside the same block.
         QTextEdit::ExtraSelection underline;
         underline.format.setUnderlineColor(QColor("#FF4C4C"));
         underline.format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
 
+        const int lineLen = block.text().length();
+        if (lineLen <= 0) {
+            QTextEdit::ExtraSelection lineSelection;
+            lineSelection.format.setBackground(QColor(255, 0, 0, 26));
+            lineSelection.format.setProperty(QTextFormat::FullWidthSelection, true);
+            lineSelection.cursor = QTextCursor(block);
+            extraSelections.append(lineSelection);
+            continue;
+        }
+
+        const int startCol = std::max(1, std::min(error.column, lineLen));
+        const int endCol = std::max(startCol, std::min(error.endColumn, lineLen));
+
         QTextCursor cur = QTextCursor(block);
-        cur.setPosition(block.position() + (error.column - 1));
-        int length = (error.endColumn - error.column) + 1;
+        cur.setPosition(block.position() + (startCol - 1));
+        const int length = std::max(1, (endCol - startCol) + 1);
         cur.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, length);
         underline.cursor = cur;
         extraSelections.append(underline);
@@ -170,18 +179,25 @@ void CodeEditor::setExtraSelectionsMerged(const QList<QTextEdit::ExtraSelection>
             continue;
         }
 
-        QTextEdit::ExtraSelection lineSelection;
-        lineSelection.format.setBackground(QColor(255, 0, 0, 20));
-        lineSelection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        lineSelection.cursor = QTextCursor(block);
-        mergedSelections.append(lineSelection);
-
         QTextEdit::ExtraSelection underline;
         underline.format.setUnderlineColor(QColor("#E05C6A"));
         underline.format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+
+        const int lineLen = block.text().length();
+        if (lineLen <= 0) {
+            QTextEdit::ExtraSelection lineSelection;
+            lineSelection.format.setBackground(QColor(255, 0, 0, 20));
+            lineSelection.format.setProperty(QTextFormat::FullWidthSelection, true);
+            lineSelection.cursor = QTextCursor(block);
+            mergedSelections.append(lineSelection);
+            continue;
+        }
+
+        const int startCol = std::max(1, std::min(error.column, lineLen));
+        const int endCol = std::max(startCol, std::min(error.endColumn, lineLen));
         QTextCursor cur(block);
-        const int start = std::max(0, error.column - 1);
-        const int len = std::max(1, (error.endColumn - error.column) + 1);
+        const int start = startCol - 1;
+        const int len = std::max(1, (endCol - startCol) + 1);
         cur.setPosition(block.position() + start);
         cur.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, len);
         underline.cursor = cur;

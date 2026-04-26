@@ -4,11 +4,13 @@
 #include <MXUWEOXILK/moc_CompileReport.cpp>
 #include <MXUWEOXILK/moc_DerivationViewer.cpp>
 #include <MXUWEOXILK/moc_GrammarCoverage.cpp>
+#include <MXUWEOXILK/moc_IRFlowDiagram.cpp>
 #include <MXUWEOXILK/moc_LifetimeDiagram.cpp>
 #include <MXUWEOXILK/moc_MainWindow.cpp>
 #include <MXUWEOXILK/moc_OptimizationDiff.cpp>
 #include <MXUWEOXILK/moc_OptimizationPanel.cpp>
 #include <MXUWEOXILK/moc_ParseTreeView.cpp>
+#include <MXUWEOXILK/moc_PerformanceMetrics.cpp>
 #include <MXUWEOXILK/moc_PipelineDiagram.cpp>
 #include <MXUWEOXILK/moc_ShortcutOverlay.cpp>
 #include <MXUWEOXILK/moc_SyntaxHighlighter.cpp>

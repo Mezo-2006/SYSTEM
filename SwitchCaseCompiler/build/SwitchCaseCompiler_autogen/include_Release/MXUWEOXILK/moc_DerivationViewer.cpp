@@ -50,7 +50,8 @@ static constexpr auto qt_meta_stringdata_ZN16DerivationViewerE = QtMocHelpers::s
     "row",
     "onStepModeToggled",
     "enabled",
-    "onStepScrubberMoved"
+    "onStepScrubberMoved",
+    "onExportRules"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -62,7 +63,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN16DerivationViewerE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-       8,   14, // methods
+       9,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -70,14 +71,15 @@ Q_CONSTINIT static const uint qt_meta_data_ZN16DerivationViewerE[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    0,   62,    2, 0x08,    1 /* Private */,
-       3,    0,   63,    2, 0x08,    2 /* Private */,
-       4,    0,   64,    2, 0x08,    3 /* Private */,
-       5,    0,   65,    2, 0x08,    4 /* Private */,
-       6,    1,   66,    2, 0x08,    5 /* Private */,
-       8,    1,   69,    2, 0x08,    7 /* Private */,
-      10,    1,   72,    2, 0x08,    9 /* Private */,
-      12,    1,   75,    2, 0x08,   11 /* Private */,
+       1,    0,   68,    2, 0x08,    1 /* Private */,
+       3,    0,   69,    2, 0x08,    2 /* Private */,
+       4,    0,   70,    2, 0x08,    3 /* Private */,
+       5,    0,   71,    2, 0x08,    4 /* Private */,
+       6,    1,   72,    2, 0x08,    5 /* Private */,
+       8,    1,   75,    2, 0x08,    7 /* Private */,
+      10,    1,   78,    2, 0x08,    9 /* Private */,
+      12,    1,   81,    2, 0x08,   11 /* Private */,
+      13,    0,   84,    2, 0x08,   13 /* Private */,
 
  // slots: parameters
     QMetaType::Void,
@@ -88,6 +90,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN16DerivationViewerE[] = {
     QMetaType::Void, QMetaType::Int,    9,
     QMetaType::Void, QMetaType::Bool,   11,
     QMetaType::Void, QMetaType::Int,    7,
+    QMetaType::Void,
 
        0        // eod
 };
@@ -120,7 +123,9 @@ Q_CONSTINIT const QMetaObject DerivationViewer::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<bool, std::false_type>,
         // method 'onStepScrubberMoved'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<int, std::false_type>
+        QtPrivate::TypeAndForceComplete<int, std::false_type>,
+        // method 'onExportRules'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>
     >,
     nullptr
 } };
@@ -138,6 +143,7 @@ void DerivationViewer::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
         case 5: _t->onStepSelected((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
         case 6: _t->onStepModeToggled((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
         case 7: _t->onStepScrubberMoved((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 8: _t->onExportRules(); break;
         default: ;
         }
     }
@@ -162,14 +168,14 @@ int DerivationViewer::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 8)
+        if (_id < 9)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 8;
+        _id -= 9;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 8)
+        if (_id < 9)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 8;
+        _id -= 9;
     }
     return _id;
 }

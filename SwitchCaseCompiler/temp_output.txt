@@ -1,0 +1,39 @@
+[phase] lexer\n[tokens] 38\nToken 0: int
+Token 1: main
+Token 2: (
+Token 3: )
+Token 4: {
+Token 5: int
+Token 6: x
+Token 7: =
+Token 8: 10
+Token 9: ;
+Token 10: switch
+Token 11: (
+Token 12: x
+Token 13: )
+Token 14: {
+Token 15: case
+Token 16: 10
+Token 17: :
+Token 18: x
+Token 19: =
+Token 20: 1
+Token 21: ;
+Token 22: break
+Token 23: ;
+Token 24: default
+Token 25: :
+Token 26: x
+Token 27: =
+Token 28: 0
+Token 29: ;
+Token 30: break
+Token 31: ;
+Token 32: }
+Token 33: return
+Token 34: 0
+Token 35: ;
+Token 36: }
+Token 37: 
+[phase] parser\n[derivation_steps] 37\n[phase] semantic\n[phase] codegen\n[tac] 11\n[tac_optimized] 11\n[asm] 12\n[asm_optimized] 12\n[status] success\n

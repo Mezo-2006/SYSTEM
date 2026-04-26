@@ -1,0 +1,57 @@
+================================================================================
+REBUILD INSTRUCTIONS FOR SWITCHCASECOMPILER WITH FIXES
+================================================================================
+
+The following fixes have been applied to the source code:
+
+1. iostream no longer added to symbol table (Lexer.cpp)
+2. 3AC table format corrected for if_goto instructions (TACGenerator.cpp)
+
+TO REBUILD:
+-----------
+
+1. Close the currently running GUI application (if any)
+
+2. Open PowerShell in the SwitchCaseCompiler directory
+
+3. Clean the build directory:
+   Remove-Item -Recurse -Force build
+   mkdir build
+
+4. Configure with CMake (using correct Qt path):
+   cd build
+   cmake -DCMAKE_PREFIX_PATH="D:\Qt\6.8.3\msvc2022_64" ..
+
+5. Build with license bypass:
+   $env:QTFRAMEWORK_BYPASS_LICENSE_CHECK = "1"
+   cmake --build . --config Release
+
+6. Run the GUI:
+   .\Release\SwitchCaseCompiler.exe
+
+EXPECTED RESULTS:
+-----------------
+
+Test with this code:
+#include <iostream>
+int main() {
+int x = 5;
+switch (x) {
+case 5:
+break;
+}
+return 0;
+}
+
+1. Symbol table should NOT contain "iostream"
+2. 3AC table should show:
+   #  | OPCODE   | RESULT | ARG 1 | ARG 2
+   1  | =        | x      | 5     |
+   2  | ==       | t0     | x     | 5
+   3  | if_goto  | L1     | t0    |
+   4  | goto     | L0     |       |
+   5  | LABEL    | L1     |       |
+   6  | goto     | L0     |       |
+   7  | LABEL    | L0     |       |
+
+================================================================================

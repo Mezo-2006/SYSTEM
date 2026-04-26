@@ -96,6 +96,18 @@ private:
     int  visitIdentifier(Identifier* n, int p);
     int  visitConstant(Constant* n, int p);
     int  visitStringLit(StringLiteral* n, int p);
+    
+    // New visitor helpers
+    int  visitTranslationUnit(TranslationUnit* n, int p);
+    int  visitFunctionDecl(FunctionDecl* n, int p);
+    int  visitCompoundStmt(CompoundStmt* n, int p);
+    int  visitDeclStmt(DeclStmt* n, int p);
+    int  visitVarDecl(VarDecl* n, int p);
+    int  visitDeclRefExpr(DeclRefExpr* n, int p);
+    int  visitIntegerLiteral(IntegerLiteral* n, int p);
+    int  visitBreakStmt(BreakStmt* n, int p);
+    int  visitReturnStmt(ReturnStmt* n, int p);
+    int  visitCaseStmt(CaseStmt* n, int p);
 
     // ── layout ────────────────────────────────────────────────────────────
     qreal subtreeWidth(int idx) const;

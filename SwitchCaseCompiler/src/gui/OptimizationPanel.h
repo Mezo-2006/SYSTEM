@@ -14,6 +14,9 @@ private:
     QCheckBox* constantFoldingCheckbox;
     QCheckBox* deadCodeCheckbox;
     QCheckBox* cseCheckbox;
+    QCheckBox* algebraicCheckbox;
+    QCheckBox* copyPropCheckbox;
+    QCheckBox* strengthReductionCheckbox;
 
     QTableWidget* beforeTable;
     QTableWidget* afterTable;
@@ -28,6 +31,9 @@ public:
     bool isConstantFoldingEnabled() const;
     bool isDeadCodeEliminationEnabled() const;
     bool isCseEnabled() const;
+    bool isAlgebraicSimplificationEnabled() const;
+    bool isCopyPropagationEnabled() const;
+    bool isStrengthReductionEnabled() const;
 
     void setOptimizationResults(const std::vector<OptimizationResult>& optimizationResults);
     void displayResults();

@@ -65,11 +65,13 @@ private:
     std::vector<DerivationStep> derivationSteps;
     std::vector<ParseError> errors;
     std::unique_ptr<ParseTreeNode> parseTree;
-    std::unique_ptr<Program> astRoot;
+    std::unique_ptr<Program> astRoot;  // Legacy
+    std::unique_ptr<TranslationUnit> translationUnit;  // New
     std::vector<IncludeDirective> includeDirectives;
     bool hasUsingNamespaceStd = false;
     bool usesMainWrapper = false;
     int parsedReturnValue = 0;
+    bool useNewAST = true;  // Flag to control which AST to build
     
     // Current token access
     Token& currentToken();
@@ -99,6 +101,11 @@ private:
     std::unique_ptr<Expression> parseExpression();
     std::unique_ptr<Expression> parseTerm();
     std::unique_ptr<Expression> parseFactor();
+    
+    // AST conversion
+    std::unique_ptr<TranslationUnit> convertToTranslationUnit(Program* program);
+    std::unique_ptr<Expression> convertExpression(Expression* expr);
+    std::unique_ptr<Statement> convertStatement(Statement* stmt);
     
     // Parse tree construction (for visualization)
     std::unique_ptr<ParseTreeNode> buildParseTree();
@@ -134,8 +141,10 @@ public:
     const std::vector<ParseError>& getErrors() const { return errors; }
     ParseTreeNode* getParseTree() const { return parseTree.get(); }
     Program* getAST() const { return astRoot.get(); }
+    TranslationUnit* getTranslationUnit() const { return translationUnit.get(); }
     
     bool hasErrors() const { return !errors.empty(); }
+    void setUseNewAST(bool use) { useNewAST = use; }
 };
 
 #endif // PARSER_H

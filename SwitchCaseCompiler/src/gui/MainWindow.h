@@ -15,9 +15,15 @@
 // Forward declarations
 class DerivationViewer;
 class ParseTreeView;
+class ASTView;
 class ThreeColumnView;
 class OptimizationPanel;
 class SyntaxHighlighter;
+class IRFlowDiagram;
+class PerformanceMetrics;
+class TokenChart;
+class PipelineDiagram;
+class LifetimeDiagram;
 
 // Core compiler components
 #include "../core/Lexer.h"
@@ -66,38 +72,64 @@ private:
     QWidget* parseTreeTab;
     ParseTreeView* parseTreeView;
 
-    // Tab 4: CFG
+    // Tab 4: AST View
+    QWidget* astTab;
+    ASTView* astView;
+
+    // Tab 5: CFG
     QWidget* cfgTab;
     QTextEdit* cfgTextView;
     
-    // Tab 5: Token Table
+    // Tab 6: Token Table
     QWidget* tokenTab;
+    QLabel* tokenCountLabel;
     QTableWidget* tokenTable;
     
-    // Tab 6: Symbol Table
+    // Tab 7: Symbol Table
     QWidget* symbolTab;
     QTableWidget* symbolTable;
     
-    // Tab 7: Three Column View (Source/TAC/Assembly)
+    // Tab 8: Three Column View (Source/TAC/Assembly)
     QWidget* traceTab;
     ThreeColumnView* threeColumnView;
     
-    // Tab 8: Optimization Panel
+    // Tab 9: Optimization Panel
     QWidget* optimizationTab;
     OptimizationPanel* optimizationPanel;
     
-    // Tab 9: Error Panel
+    // Tab 10: Error Panel
     QWidget* errorTab;
     QTableWidget* errorTable;
     
-    // Tab 10: Output Console
+    // Tab 11: Output Console
     QWidget* consoleTab;
     QTextEdit* consoleOutput;
+
+    // Tab 12: Token Insights
+    QWidget* tokenInsightsTab;
+    TokenChart* tokenChart;
+
+    // Tab 13: Pipeline Studio
+    QWidget* pipelineTab;
+    PipelineDiagram* pipelineDiagram;
+
+    // Tab 14: Lifetime View
+    QWidget* lifetimeTab;
+    LifetimeDiagram* lifetimeDiagram;
+    
+    // Legacy Tab: IR Flow Diagram (kept in code, not shown in UI)
+    QWidget* irFlowTab;
+    IRFlowDiagram* irFlowDiagram;
+    
+    // Tab 15: Performance Metrics
+    QWidget* performanceTab;
+    PerformanceMetrics* performanceMetrics;
     
     void setupUI();  // Main UI setup
     void setupEditorTab();
     void setupDerivationTab();
     void setupParseTreeTab();
+    void setupASTTab();
     void setupCFGTab();
     void setupTokenTab();
     void setupSymbolTab();
@@ -105,6 +137,11 @@ private:
     void setupOptimizationTab();
     void setupErrorTab();
     void setupConsoleTab();
+    void setupTokenInsightsTab();
+    void setupPipelineTab();
+    void setupLifetimeTab();
+    void setupIRFlowTab();
+    void setupPerformanceTab();
     
     void updateTokenTable();
     void updateSymbolTable();

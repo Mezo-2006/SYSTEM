@@ -30,6 +30,7 @@ private:
     QPushButton* autoPlayButton;
     QPushButton* jumpToStartButton;
     QPushButton* jumpToEndButton;
+    QPushButton* exportRulesButton;
     QSlider* stepScrubber;
     QSlider* speedSlider;
     
@@ -57,6 +58,7 @@ private slots:
     void onStepSelected(int row);
     void onStepModeToggled(bool enabled);
     void onStepScrubberMoved(int value);
+    void onExportRules();
 };
 
 #endif // DERIVATION_VIEWER_H

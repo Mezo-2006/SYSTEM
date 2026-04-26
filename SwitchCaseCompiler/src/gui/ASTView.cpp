@@ -135,6 +135,19 @@ int ASTView::visitNode(ASTNode* node, int parentIdx)
 {
     if (!node) return -1;
 
+    // New node types first
+    if (auto* tu = dynamic_cast<TranslationUnit*>(node))     return visitTranslationUnit(tu, parentIdx);
+    if (auto* fd = dynamic_cast<FunctionDecl*>(node))        return visitFunctionDecl(fd, parentIdx);
+    if (auto* cs = dynamic_cast<CompoundStmt*>(node))        return visitCompoundStmt(cs, parentIdx);
+    if (auto* ds = dynamic_cast<DeclStmt*>(node))            return visitDeclStmt(ds, parentIdx);
+    if (auto* vd = dynamic_cast<VarDecl*>(node))             return visitVarDecl(vd, parentIdx);
+    if (auto* dr = dynamic_cast<DeclRefExpr*>(node))         return visitDeclRefExpr(dr, parentIdx);
+    if (auto* il = dynamic_cast<IntegerLiteral*>(node))      return visitIntegerLiteral(il, parentIdx);
+    if (auto* bs = dynamic_cast<BreakStmt*>(node))           return visitBreakStmt(bs, parentIdx);
+    if (auto* rs = dynamic_cast<ReturnStmt*>(node))          return visitReturnStmt(rs, parentIdx);
+    if (auto* cas = dynamic_cast<CaseStmt*>(node))           return visitCaseStmt(cas, parentIdx);
+    
+    // Legacy node types
     if (auto* p = dynamic_cast<Program*>(node))              return visitProgram(p, parentIdx);
     if (auto* s = dynamic_cast<SwitchStatement*>(node))      return visitSwitch(s, parentIdx);
     if (auto* c = dynamic_cast<CaseClause*>(node))           return visitCase(c, parentIdx);
@@ -594,4 +607,103 @@ void ASTView::wheelEvent(QWheelEvent* event)
     QPointF before = (mp - m_pan) / oldZoom;
     m_pan = mp - before * m_zoom;
     update();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  New AST Node Visitors
+// ─────────────────────────────────────────────────────────────────────────────
+
+int ASTView::visitTranslationUnit(TranslationUnit* n, int p)
+{
+    int idx = addNode("TranslationUnit", QString("line %1").arg(n->line), C_PROGRAM, n, false, p);
+    if (n->mainFunction)
+        visitNode(n->mainFunction.get(), idx);
+    return idx;
+}
+
+int ASTView::visitFunctionDecl(FunctionDecl* n, int p)
+{
+    QString lbl = QString::fromStdString(n->name);
+    QString sub = QString("returns %1").arg(QString::fromStdString(n->returnType));
+    int idx = addNode("FunctionDecl", lbl, C_SWITCH, n, false, p);
+    
+    // Add return type as child
+    addNode(QString::fromStdString(n->returnType), "ReturnType", C_DECL, nullptr, true, idx);
+    
+    if (n->body)
+        visitNode(n->body.get(), idx);
+    return idx;
+}
+
+int ASTView::visitCompoundStmt(CompoundStmt* n, int p)
+{
+    int idx = addNode("CompoundStmt", QString("line %1").arg(n->line), C_SWITCH.lighter(120), n, false, p);
+    for (const auto& stmt : n->statements)
+        visitNode(stmt.get(), idx);
+    return idx;
+}
+
+int ASTView::visitDeclStmt(DeclStmt* n, int p)
+{
+    int idx = addNode("DeclStmt", QString("line %1").arg(n->line), C_DECL, n, false, p);
+    if (n->declaration)
+        visitNode(n->declaration.get(), idx);
+    return idx;
+}
+
+int ASTView::visitVarDecl(VarDecl* n, int p)
+{
+    QString lbl = QString::fromStdString(n->name);
+    QString sub = QString::fromStdString(n->type);
+    int idx = addNode("VarDecl", lbl, C_DECL, n, false, p);
+    
+    // Add type as child
+    addNode(QString::fromStdString(n->type), "Type", C_DECL.lighter(130), nullptr, true, idx);
+    
+    if (n->initializer) {
+        int initIdx = addNode("Init", "", C_DECL.lighter(110), nullptr, false, idx);
+        visitNode(n->initializer.get(), initIdx);
+    }
+    return idx;
+}
+
+int ASTView::visitDeclRefExpr(DeclRefExpr* n, int p)
+{
+    QString lbl = QString::fromStdString(n->name);
+    QString sub = n->type.empty() ? "DeclRefExpr" : QString::fromStdString(n->type);
+    return addNode(lbl, sub, C_IDENT, n, true, p);
+}
+
+int ASTView::visitIntegerLiteral(IntegerLiteral* n, int p)
+{
+    return addNode(QString::number(n->value), "IntegerLiteral", C_CONST, n, true, p);
+}
+
+int ASTView::visitBreakStmt(BreakStmt* n, int p)
+{
+    return addNode("break", "BreakStmt", C_CASE, n, true, p);
+}
+
+int ASTView::visitReturnStmt(ReturnStmt* n, int p)
+{
+    int idx = addNode("return", "ReturnStmt", C_CASE, n, false, p);
+    if (n->returnValue)
+        visitNode(n->returnValue.get(), idx);
+    return idx;
+}
+
+int ASTView::visitCaseStmt(CaseStmt* n, int p)
+{
+    QString lbl = n->isDefault ? "default" : QString("case %1").arg(n->caseValue);
+    QColor col = n->isDefault ? C_DEFAULT : C_CASE;
+    int idx = addNode("CaseStmt", lbl, col, n, false, p);
+    
+    if (!n->isDefault) {
+        // Add case value as child
+        addNode(QString::number(n->caseValue), "Value", C_CONST, nullptr, true, idx);
+    }
+    
+    for (const auto& stmt : n->statements)
+        visitNode(stmt.get(), idx);
+    return idx;
 }

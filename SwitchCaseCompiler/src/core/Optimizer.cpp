@@ -311,12 +311,221 @@ void Optimizer::optimizeCSE(bool enabled) {
     }
 }
 
-std::vector<TACInstruction> Optimizer::optimize(bool constFold, bool deadCode, bool cse) {
+std::vector<TACInstruction> Optimizer::optimize(bool constFold, bool deadCode, bool cse, 
+                                               bool algebraic, bool copyProp, bool strengthRed) {
     optimizationResults.clear();
     
     optimizeConstantFolding(constFold);
+    optimizeAlgebraicSimplification(algebraic);
+    optimizeCopyPropagation(copyProp);
     optimizeDeadCode(deadCode);
     optimizeCSE(cse);
+    optimizeStrengthReduction(strengthRed);
     
     return instructions;
+}
+
+// Advanced Optimization Passes
+
+std::vector<TACInstruction> Optimizer::algebraicSimplification(const std::vector<TACInstruction>& code) {
+    std::vector<TACInstruction> optimized;
+    
+    for (const auto& inst : code) {
+        TACInstruction newInst = inst;
+        bool simplified = false;
+        
+        switch (inst.opcode) {
+            case TACOpcode::ADD:
+                // x + 0 = x, 0 + x = x
+                if (inst.arg2 == "0") {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, inst.arg1);
+                    simplified = true;
+                } else if (inst.arg1 == "0") {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, inst.arg2);
+                    simplified = true;
+                }
+                break;
+                
+            case TACOpcode::SUB:
+                // x - 0 = x
+                if (inst.arg2 == "0") {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, inst.arg1);
+                    simplified = true;
+                }
+                // x - x = 0
+                else if (inst.arg1 == inst.arg2) {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, "0");
+                    simplified = true;
+                }
+                break;
+                
+            case TACOpcode::MUL:
+                // x * 0 = 0, 0 * x = 0
+                if (inst.arg1 == "0" || inst.arg2 == "0") {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, "0");
+                    simplified = true;
+                }
+                // x * 1 = x, 1 * x = x
+                else if (inst.arg2 == "1") {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, inst.arg1);
+                    simplified = true;
+                } else if (inst.arg1 == "1") {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, inst.arg2);
+                    simplified = true;
+                }
+                break;
+                
+            case TACOpcode::DIV:
+                // x / 1 = x
+                if (inst.arg2 == "1") {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, inst.arg1);
+                    simplified = true;
+                }
+                // x / x = 1 (assuming x != 0)
+                else if (inst.arg1 == inst.arg2) {
+                    newInst = TACInstruction(TACOpcode::ASSIGN, inst.result, "1");
+                    simplified = true;
+                }
+                break;
+                
+            default:
+                break;
+        }
+        
+        optimized.push_back(newInst);
+    }
+    
+    return optimized;
+}
+
+std::vector<TACInstruction> Optimizer::copyPropagation(const std::vector<TACInstruction>& code) {
+    std::vector<TACInstruction> optimized;
+    std::map<std::string, std::string> copies; // var -> copy source
+    
+    for (const auto& inst : code) {
+        TACInstruction newInst = inst;
+        bool modified = false;
+        
+        // Replace uses with copy sources
+        if (!inst.arg1.empty() && copies.find(inst.arg1) != copies.end()) {
+            newInst.arg1 = copies[inst.arg1];
+            modified = true;
+        }
+        if (!inst.arg2.empty() && copies.find(inst.arg2) != copies.end()) {
+            newInst.arg2 = copies[inst.arg2];
+            modified = true;
+        }
+        
+        // Track copy assignments: x = y
+        if (inst.opcode == TACOpcode::ASSIGN && !isConstant(inst.arg1)) {
+            copies[inst.result] = inst.arg1;
+        } else {
+            // Other assignments invalidate copies to the result
+            copies.erase(inst.result);
+        }
+        
+        optimized.push_back(newInst);
+    }
+    
+    return optimized;
+}
+
+std::vector<TACInstruction> Optimizer::strengthReduction(const std::vector<TACInstruction>& code) {
+    std::vector<TACInstruction> optimized;
+    
+    for (const auto& inst : code) {
+        TACInstruction newInst = inst;
+        bool reduced = false;
+        
+        switch (inst.opcode) {
+            case TACOpcode::MUL:
+                // x * 2 = x + x (strength reduction)
+                if (inst.arg2 == "2") {
+                    newInst = TACInstruction(TACOpcode::ADD, inst.result, inst.arg1, inst.arg1);
+                    reduced = true;
+                } else if (inst.arg1 == "2") {
+                    newInst = TACInstruction(TACOpcode::ADD, inst.result, inst.arg2, inst.arg2);
+                    reduced = true;
+                }
+                // x * power of 2 could be converted to shifts (not implemented here)
+                break;
+                
+            case TACOpcode::DIV:
+                // x / 2 could be converted to right shift (not implemented here)
+                break;
+                
+            default:
+                break;
+        }
+        
+        optimized.push_back(newInst);
+    }
+    
+    return optimized;
+}
+
+void Optimizer::optimizeAlgebraicSimplification(bool enabled) {
+    if (!enabled) return;
+    
+    OptimizationResult result("Algebraic Simplification");
+    result.before = instructions;
+    
+    instructions = algebraicSimplification(instructions);
+    
+    result.after = instructions;
+    result.removedInstructions = static_cast<int>(result.before.size() - result.after.size());
+    result.modifiedInstructions = 0;
+    
+    // Count modified instructions
+    for (size_t i = 0; i < std::min(result.before.size(), result.after.size()); ++i) {
+        if (result.before[i].toString() != result.after[i].toString()) {
+            result.modifiedInstructions++;
+        }
+    }
+    
+    optimizationResults.push_back(result);
+}
+
+void Optimizer::optimizeCopyPropagation(bool enabled) {
+    if (!enabled) return;
+    
+    OptimizationResult result("Copy Propagation");
+    result.before = instructions;
+    
+    instructions = copyPropagation(instructions);
+    
+    result.after = instructions;
+    result.removedInstructions = static_cast<int>(result.before.size() - result.after.size());
+    result.modifiedInstructions = 0;
+    
+    // Count modified instructions
+    for (size_t i = 0; i < std::min(result.before.size(), result.after.size()); ++i) {
+        if (result.before[i].toString() != result.after[i].toString()) {
+            result.modifiedInstructions++;
+        }
+    }
+    
+    optimizationResults.push_back(result);
+}
+
+void Optimizer::optimizeStrengthReduction(bool enabled) {
+    if (!enabled) return;
+    
+    OptimizationResult result("Strength Reduction");
+    result.before = instructions;
+    
+    instructions = strengthReduction(instructions);
+    
+    result.after = instructions;
+    result.removedInstructions = static_cast<int>(result.before.size() - result.after.size());
+    result.modifiedInstructions = 0;
+    
+    // Count modified instructions
+    for (size_t i = 0; i < std::min(result.before.size(), result.after.size()); ++i) {
+        if (result.before[i].toString() != result.after[i].toString()) {
+            result.modifiedInstructions++;
+        }
+    }
+    
+    optimizationResults.push_back(result);
 }

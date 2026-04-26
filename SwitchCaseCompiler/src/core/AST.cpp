@@ -12,7 +12,16 @@ std::string BinaryExpression::toString() const {
     return ss.str();
 }
 
-// Identifier
+// DeclRefExpr
+void DeclRefExpr::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string DeclRefExpr::toString() const {
+    return name + (type.empty() ? "" : " : " + type);
+}
+
+// Identifier (legacy)
 void Identifier::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
@@ -21,7 +30,16 @@ std::string Identifier::toString() const {
     return name;
 }
 
-// Constant
+// IntegerLiteral
+void IntegerLiteral::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string IntegerLiteral::toString() const {
+    return std::to_string(value);
+}
+
+// Constant (legacy)
 void Constant::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
@@ -39,6 +57,44 @@ std::string StringLiteral::toString() const {
     return "\"" + value + "\"";
 }
 
+// CompoundStmt
+void CompoundStmt::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string CompoundStmt::toString() const {
+    std::stringstream ss;
+    ss << "{ ";
+    for (const auto& stmt : statements) {
+        ss << stmt->toString() << " ";
+    }
+    ss << "}";
+    return ss.str();
+}
+
+// VarDecl
+void VarDecl::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string VarDecl::toString() const {
+    std::stringstream ss;
+    ss << type << " " << name;
+    if (initializer) {
+        ss << " = " << initializer->toString();
+    }
+    return ss.str();
+}
+
+// DeclStmt
+void DeclStmt::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string DeclStmt::toString() const {
+    return declaration->toString() + ";";
+}
+
 // AssignmentStatement
 void AssignmentStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
@@ -50,7 +106,7 @@ std::string AssignmentStatement::toString() const {
     return ss.str();
 }
 
-// DeclarationStatement
+// DeclarationStatement (legacy)
 void DeclarationStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
@@ -65,7 +121,27 @@ std::string DeclarationStatement::toString() const {
     return ss.str();
 }
 
-// CaseClause
+// BreakStmt
+void BreakStmt::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string BreakStmt::toString() const {
+    return "break;";
+}
+
+// ReturnStmt
+void ReturnStmt::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string ReturnStmt::toString() const {
+    if (returnValue) {
+        return "return " + returnValue->toString() + ";";
+    }
+    return "return;";
+}
+
 // CinStatement
 void CinStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
@@ -84,6 +160,26 @@ std::string CoutStatement::toString() const {
     return "cout << " + expression->toString() + ";";
 }
 
+// CaseStmt
+void CaseStmt::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string CaseStmt::toString() const {
+    std::stringstream ss;
+    if (isDefault) {
+        ss << "default: ";
+    } else {
+        ss << "case " << caseValue << ": ";
+    }
+    for (const auto& stmt : statements) {
+        ss << stmt->toString() << " ";
+    }
+    if (hasBreak) ss << "break;";
+    return ss.str();
+}
+
+// CaseClause (legacy)
 void CaseClause::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
@@ -109,18 +205,50 @@ void SwitchStatement::accept(ASTVisitor* visitor) {
 
 std::string SwitchStatement::toString() const {
     std::stringstream ss;
-    ss << "switch (" << condition->toString() << ") { ";
-    for (const auto& caseClause : cases) {
-        ss << caseClause->toString() << " ";
+    ss << "switch (" << condition->toString() << ") ";
+    if (body) {
+        ss << body->toString();
+    } else {
+        // Legacy format
+        ss << "{ ";
+        for (const auto& caseClause : cases) {
+            ss << caseClause->toString() << " ";
+        }
+        if (defaultCase) {
+            ss << defaultCase->toString() << " ";
+        }
+        ss << "}";
     }
-    if (defaultCase) {
-        ss << defaultCase->toString() << " ";
-    }
-    ss << "}";
     return ss.str();
 }
 
-// Program
+// FunctionDecl
+void FunctionDecl::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string FunctionDecl::toString() const {
+    std::stringstream ss;
+    ss << returnType << " " << name << "() ";
+    if (body) {
+        ss << body->toString();
+    }
+    return ss.str();
+}
+
+// TranslationUnit
+void TranslationUnit::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
+std::string TranslationUnit::toString() const {
+    if (mainFunction) {
+        return mainFunction->toString();
+    }
+    return "TranslationUnit";
+}
+
+// Program (legacy)
 void Program::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }

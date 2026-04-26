@@ -14,6 +14,8 @@ std::string TACInstruction::opcodeToString() const {
         case TACOpcode::NEQ: return "!=";
         case TACOpcode::LT: return "<";
         case TACOpcode::GT: return ">";
+        case TACOpcode::CIN: return "cin";
+        case TACOpcode::COUT: return "cout";
         case TACOpcode::LABEL: return "LABEL";
         case TACOpcode::GOTO: return "goto";
         case TACOpcode::IF_GOTO: return "if_goto";
@@ -38,11 +40,11 @@ std::string TACInstruction::toString() const {
             break;
             
         case TACOpcode::IF_GOTO:
-            ss << "if " << arg1 << " goto " << result;
+            ss << "if_goto " << result << ", " << arg1;
             break;
             
         case TACOpcode::IF_FALSE_GOTO:
-            ss << "ifFalse " << arg1 << " goto " << result;
+            ss << "if_false_goto " << result << ", " << arg1;
             break;
             
         case TACOpcode::ASSIGN:
@@ -62,6 +64,32 @@ std::string TACInstruction::toString() const {
             
         case TACOpcode::RETURN:
             ss << "return " << result;
+            break;
+
+        case TACOpcode::CIN:
+            ss << "cin >> " << result;
+            break;
+
+        case TACOpcode::COUT:
+            ss << "cout << " << result;
+            break;
+
+        case TACOpcode::PARAM:
+            ss << "param " << result;
+            break;
+
+        case TACOpcode::CALL:
+            if (result.empty()) {
+                ss << "call " << arg1;
+                if (!arg2.empty()) {
+                    ss << ", " << arg2;
+                }
+            } else {
+                ss << result << " = call " << arg1;
+                if (!arg2.empty()) {
+                    ss << ", " << arg2;
+                }
+            }
             break;
             
         default:
@@ -116,6 +144,74 @@ std::vector<TACInstruction> TACGenerator::generate(Program* program) {
     return instructions;
 }
 
+std::vector<TACInstruction> TACGenerator::generate(TranslationUnit* tu) {
+    reset();
+    
+    if (tu) {
+        tu->accept(this);
+    }
+    
+    return instructions;
+}
+
+// New visitor implementations
+void TACGenerator::visit(TranslationUnit* node) {
+    if (node->mainFunction) {
+        node->mainFunction->accept(this);
+    }
+}
+
+void TACGenerator::visit(FunctionDecl* node) {
+    if (node->body) {
+        node->body->accept(this);
+    }
+}
+
+void TACGenerator::visit(CompoundStmt* node) {
+    for (auto& stmt : node->statements) {
+        stmt->accept(this);
+    }
+}
+
+void TACGenerator::visit(DeclStmt* node) {
+    if (node->declaration) {
+        node->declaration->accept(this);
+    }
+}
+
+void TACGenerator::visit(VarDecl* node) {
+    if (node->initializer) {
+        node->initializer->accept(this);
+        emitInstruction(TACOpcode::ASSIGN, node->name, lastResult);
+    }
+}
+
+void TACGenerator::visit(DeclRefExpr* node) {
+    lastResult = node->name;
+}
+
+void TACGenerator::visit(IntegerLiteral* node) {
+    lastResult = std::to_string(node->value);
+}
+
+void TACGenerator::visit(BreakStmt* node) {
+    // Break is handled by switch statement context
+}
+
+void TACGenerator::visit(ReturnStmt* node) {
+    if (node->returnValue) {
+        node->returnValue->accept(this);
+        emitInstruction(TACOpcode::RETURN, lastResult);
+    }
+}
+
+void TACGenerator::visit(CaseStmt* node) {
+    for (auto& stmt : node->statements) {
+        stmt->accept(this);
+    }
+}
+
+// Legacy visitor implementations
 void TACGenerator::visit(Program* node) {
     for (auto& stmt : node->preSwitchStatements) {
         stmt->accept(this);

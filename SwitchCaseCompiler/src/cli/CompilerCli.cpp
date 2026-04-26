@@ -9,6 +9,7 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <algorithm>
 
 namespace {
 
@@ -68,10 +69,19 @@ int main(int argc, char* argv[]) {
     Lexer lexer;
     lexer.setSource(sourceCode);
     const auto tokens = lexer.tokenize();
+    const auto eofCount = std::count_if(tokens.begin(), tokens.end(), [](const Token& token) {
+        return token.type == TokenType::END_OF_FILE;
+    });
+    const auto lexicalTokenCount = tokens.size() - eofCount;
 
     std::cout << "[phase] lexer\\n";
-    std::cout << "[tokens] " << tokens.size() << "\\n";    for (size_t i = 0; i < tokens.size(); i++) {
-        std::cout << "Token " << i << ": " << tokens[i].lexeme << "\n";
+    std::cout << "[tokens] " << lexicalTokenCount << "\\n";
+    size_t displayIndex = 0;
+    for (const auto& token : tokens) {
+        if (token.type == TokenType::END_OF_FILE) {
+            continue;
+        }
+        std::cout << "Token " << displayIndex++ << ": " << token.lexeme << "\n";
     }
     if (!lexer.getErrors().empty()) {
         for (const auto& err : lexer.getErrors()) {

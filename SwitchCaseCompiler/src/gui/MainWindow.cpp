@@ -1,10 +1,17 @@
 #include "MainWindow.h"
 #include "DerivationViewer.h"
 #include "ParseTreeView.h"
+#include "ASTView.h"
 #include "ThreeColumnView.h"
 #include "OptimizationPanel.h"
 #include "SyntaxHighlighter.h"
 #include "CodeEditor.h"
+#include "IRFlowDiagram.h"
+#include "PerformanceMetrics.h"
+#include "CompileReport.h"
+#include "TokenChart.h"
+#include "PipelineDiagram.h"
+#include "LifetimeDiagram.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -25,6 +32,7 @@
 #include <QCursor>
 #include <QTextCursor>
 #include <QComboBox>
+#include <QScrollArea>
 #include <QObject>
 #include <algorithm>
 #include <set>
@@ -107,13 +115,18 @@ void MainWindow::setupUI() {
     setupEditorTab();
     setupDerivationTab();
     setupParseTreeTab();
+    setupASTTab();
     setupCFGTab();
     setupTokenTab();
     setupSymbolTab();
     setupTraceTab();
     setupOptimizationTab();
+    setupTokenInsightsTab();
+    setupLifetimeTab();
+    setupPipelineTab();
     setupErrorTab();
     setupConsoleTab();
+    setupPerformanceTab();
 }
 
 void MainWindow::setupEditorTab() {
@@ -513,6 +526,58 @@ void MainWindow::setupParseTreeTab() {
     tabWidget->addTab(parseTreeTab, "🌲 Parse Tree");
 }
 
+void MainWindow::setupASTTab() {
+    astTab = new QWidget();
+    astTab->setStyleSheet("background-color: #0F172A;");
+    QVBoxLayout* layout = new QVBoxLayout(astTab);
+    layout->setContentsMargins(15, 15, 15, 15);
+
+    QLabel* header = new QLabel("🌳 Abstract Syntax Tree (Clang-style)");
+    header->setStyleSheet(
+        "font-size: 18px; font-weight: bold; color: #7C3AED; "
+        "background-color: #1E293B; padding: 10px; border-radius: 8px; "
+        "border-left: 5px solid #A78BFA; margin-bottom: 10px;"
+    );
+    layout->addWidget(header);
+
+    QHBoxLayout* toolbar = new QHBoxLayout();
+    QPushButton* zoomOutBtn = new QPushButton("−");
+    QPushButton* zoomInBtn = new QPushButton("+");
+    QPushButton* resetViewBtn = new QPushButton("Reset View");
+    QLabel* zoomLabel = new QLabel("Zoom: 100%");
+    zoomOutBtn->setFixedWidth(32);
+    zoomInBtn->setFixedWidth(32);
+    zoomOutBtn->setStyleSheet("QPushButton { background-color: #374151; color: #F9FAFB; border: 1px solid #6B7280; border-radius: 4px; }");
+    zoomInBtn->setStyleSheet("QPushButton { background-color: #374151; color: #F9FAFB; border: 1px solid #6B7280; border-radius: 4px; }");
+    resetViewBtn->setStyleSheet("QPushButton { background-color: #7C3AED; color: #FFFFFF; border: none; border-radius: 4px; padding: 4px 8px; }");
+    zoomLabel->setStyleSheet("QLabel { color: #E5E7EB; }");
+    
+    toolbar->addWidget(new QLabel("AST Controls:"));
+    toolbar->addWidget(zoomOutBtn);
+    toolbar->addWidget(zoomInBtn);
+    toolbar->addWidget(resetViewBtn);
+    toolbar->addWidget(zoomLabel);
+    toolbar->addStretch();
+     
+    astView = new ASTView();
+    connect(zoomInBtn, &QPushButton::clicked, this, [this, zoomLabel]() {
+        astView->zoomIn();
+        zoomLabel->setText(QString("Zoom: %1%").arg(astView->zoomPercent()));
+    });
+    connect(zoomOutBtn, &QPushButton::clicked, this, [this, zoomLabel]() {
+        astView->zoomOut();
+        zoomLabel->setText(QString("Zoom: %1%").arg(astView->zoomPercent()));
+    });
+    connect(resetViewBtn, &QPushButton::clicked, this, [this, zoomLabel]() {
+        astView->resetView();
+        zoomLabel->setText(QString("Zoom: %1%").arg(astView->zoomPercent()));
+    });
+    layout->addLayout(toolbar);
+    layout->addWidget(astView);
+    
+    tabWidget->addTab(astTab, "🌳 AST View");
+}
+
 void MainWindow::setupCFGTab() {
     cfgTab = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout(cfgTab);
@@ -630,6 +695,21 @@ void MainWindow::setupTokenTab() {
     );
     layout->addWidget(header);
 
+    tokenCountLabel = new QLabel("Lexical Tokens: 0 | EOF Markers: 0 | Total Rows: 0");
+    tokenCountLabel->setStyleSheet(
+        "QLabel {"
+        "  color: #CBD5E1;"
+        "  background-color: #1E293B;"
+        "  border: 1px solid #334155;"
+        "  border-radius: 6px;"
+        "  padding: 8px 10px;"
+        "  font-family: 'Consolas';"
+        "  font-size: 11pt;"
+        "  margin-bottom: 8px;"
+        "}"
+    );
+    layout->addWidget(tokenCountLabel);
+
     tokenTable = new QTableWidget();
     tokenTable->setColumnCount(4);
     tokenTable->setHorizontalHeaderLabels({"Lexeme (Token)", "Token Type", "Line No.", "Column No."});
@@ -740,6 +820,70 @@ void MainWindow::setupOptimizationTab() {
     tabWidget->addTab(optimizationTab, "⚡ Optimizer");
 }
 
+void MainWindow::setupTokenInsightsTab() {
+    tokenInsightsTab = new QWidget();
+    tokenInsightsTab->setStyleSheet("background-color: #0F172A;");
+    QVBoxLayout* layout = new QVBoxLayout(tokenInsightsTab);
+    layout->setContentsMargins(15, 15, 15, 15);
+
+    QLabel* header = new QLabel("📈 Token Insights & Frequency Heatmap");
+    header->setStyleSheet(
+        "font-size: 18px; font-weight: bold; color: #06B6D4; "
+        "background-color: #1E293B; padding: 10px; border-radius: 8px; "
+        "border-left: 5px solid #22D3EE; margin-bottom: 10px;"
+    );
+    layout->addWidget(header);
+
+    tokenChart = new TokenChart();
+    layout->addWidget(tokenChart);
+
+    tabWidget->addTab(tokenInsightsTab, "📈 Token Insights");
+}
+
+void MainWindow::setupLifetimeTab() {
+    lifetimeTab = new QWidget();
+    lifetimeTab->setStyleSheet("background-color: #0F172A;");
+    QVBoxLayout* layout = new QVBoxLayout(lifetimeTab);
+    layout->setContentsMargins(15, 15, 15, 15);
+
+    QLabel* header = new QLabel("🧬 Variable Lifetime & Data Flow");
+    header->setStyleSheet(
+        "font-size: 18px; font-weight: bold; color: #F59E0B; "
+        "background-color: #1E293B; padding: 10px; border-radius: 8px; "
+        "border-left: 5px solid #FBBF24; margin-bottom: 10px;"
+    );
+    layout->addWidget(header);
+
+    lifetimeDiagram = new LifetimeDiagram();
+    QScrollArea* scrollArea = new QScrollArea();
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setWidget(lifetimeDiagram);
+    layout->addWidget(scrollArea);
+
+    tabWidget->addTab(lifetimeTab, "🧬 Lifetime");
+}
+
+void MainWindow::setupPipelineTab() {
+    pipelineTab = new QWidget();
+    pipelineTab->setStyleSheet("background-color: #0F172A;");
+    QVBoxLayout* layout = new QVBoxLayout(pipelineTab);
+    layout->setContentsMargins(15, 15, 15, 15);
+
+    QLabel* header = new QLabel("🚦 Pipeline Studio (Live Phase Diagnostics)");
+    header->setStyleSheet(
+        "font-size: 18px; font-weight: bold; color: #34D399; "
+        "background-color: #1E293B; padding: 10px; border-radius: 8px; "
+        "border-left: 5px solid #10B981; margin-bottom: 10px;"
+    );
+    layout->addWidget(header);
+
+    pipelineDiagram = new PipelineDiagram();
+    layout->addWidget(pipelineDiagram);
+
+    tabWidget->addTab(pipelineTab, "🚦 Pipeline Studio");
+}
+
 void MainWindow::setupErrorTab() {
     errorTab = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout(errorTab);
@@ -770,6 +914,72 @@ void MainWindow::setupConsoleTab() {
     tabWidget->addTab(consoleTab, "💻 Console");
 }
 
+void MainWindow::setupIRFlowTab() {
+    irFlowTab = new QWidget();
+    irFlowTab->setStyleSheet("background-color: #0F172A;");
+    QVBoxLayout* layout = new QVBoxLayout(irFlowTab);
+    layout->setContentsMargins(15, 15, 15, 15);
+
+    QLabel* header = new QLabel("🔄 Interactive IR Flow Visualization");
+    header->setStyleSheet(
+        "font-size: 18px; font-weight: bold; color: #06B6D4; "
+        "background-color: #1E293B; padding: 10px; border-radius: 8px; "
+        "border-left: 5px solid #22D3EE; margin-bottom: 10px;"
+    );
+    layout->addWidget(header);
+
+    // Control buttons
+    QHBoxLayout* controlsLayout = new QHBoxLayout();
+    QPushButton* playBtn = new QPushButton("▶ Play");
+    QPushButton* pauseBtn = new QPushButton("⏸ Pause");
+    QPushButton* resetBtn = new QPushButton("⏹ Reset");
+    QPushButton* stepBtn = new QPushButton("⏭ Step");
+    QPushButton* originalBtn = new QPushButton("Original IR");
+    QPushButton* optimizedBtn = new QPushButton("Optimized IR");
+    
+    playBtn->setStyleSheet("QPushButton { background-color: #10B981; color: white; padding: 8px 16px; border-radius: 4px; }");
+    pauseBtn->setStyleSheet("QPushButton { background-color: #F59E0B; color: white; padding: 8px 16px; border-radius: 4px; }");
+    resetBtn->setStyleSheet("QPushButton { background-color: #EF4444; color: white; padding: 8px 16px; border-radius: 4px; }");
+    stepBtn->setStyleSheet("QPushButton { background-color: #8B5CF6; color: white; padding: 8px 16px; border-radius: 4px; }");
+    originalBtn->setStyleSheet("QPushButton { background-color: #334155; color: white; padding: 8px 14px; border-radius: 4px; }");
+    optimizedBtn->setStyleSheet("QPushButton { background-color: #0EA5E9; color: white; padding: 8px 14px; border-radius: 4px; }");
+    
+    controlsLayout->addWidget(playBtn);
+    controlsLayout->addWidget(pauseBtn);
+    controlsLayout->addWidget(resetBtn);
+    controlsLayout->addWidget(stepBtn);
+    controlsLayout->addSpacing(8);
+    controlsLayout->addWidget(originalBtn);
+    controlsLayout->addWidget(optimizedBtn);
+    controlsLayout->addStretch();
+    
+    layout->addLayout(controlsLayout);
+
+    irFlowDiagram = new IRFlowDiagram();
+    layout->addWidget(irFlowDiagram);
+
+    // Connect controls
+    connect(playBtn, &QPushButton::clicked, irFlowDiagram, &IRFlowDiagram::startExecution);
+    connect(pauseBtn, &QPushButton::clicked, irFlowDiagram, &IRFlowDiagram::pauseExecution);
+    connect(resetBtn, &QPushButton::clicked, irFlowDiagram, &IRFlowDiagram::resetExecution);
+    connect(stepBtn, &QPushButton::clicked, irFlowDiagram, &IRFlowDiagram::stepForward);
+    connect(originalBtn, &QPushButton::clicked, this, [this]() { irFlowDiagram->setShowOptimized(false); });
+    connect(optimizedBtn, &QPushButton::clicked, this, [this]() { irFlowDiagram->setShowOptimized(true); });
+
+    tabWidget->addTab(irFlowTab, "🔄 IR Flow");
+}
+
+void MainWindow::setupPerformanceTab() {
+    performanceTab = new QWidget();
+    QVBoxLayout* layout = new QVBoxLayout(performanceTab);
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    performanceMetrics = new PerformanceMetrics();
+    layout->addWidget(performanceMetrics);
+
+    tabWidget->addTab(performanceTab, "📊 Performance");
+}
+
 
 void MainWindow::connectSignals() {
     connect(compileButton, &QPushButton::clicked, this, &MainWindow::onCompile);
@@ -795,6 +1005,10 @@ void MainWindow::connectSignals() {
 void MainWindow::onCompile() {
     consoleOutput->clear();
     errorTable->setRowCount(0);
+    symbolTable->setRowCount(0);
+    if (pipelineDiagram) {
+        pipelineDiagram->resetAll();
+    }
     
     std::string sourceCode = sourceEditor->toPlainText().toStdString();
     
@@ -804,6 +1018,10 @@ void MainWindow::onCompile() {
     }
     
     logToConsole("=== COMPILATION STARTED ===\n");
+
+    // Initialize performance metrics
+    CompilationMetrics metrics;
+    metrics.timestamp = std::chrono::system_clock::now();
 
     auto animatePhaseProgress = [this](int targetValue) {
         auto* anim = new QPropertyAnimation(phaseProgressBar, "value", this);
@@ -891,11 +1109,24 @@ void MainWindow::onCompile() {
     logToConsole("\n[PHASE 1] Lexical Analysis...");
     lexer->setSource(sourceCode);
     auto tokens = lexer->tokenize();
+    metrics.lexerTime = std::chrono::milliseconds(phaseTimer.elapsed());
+    const int eofTokenCount = static_cast<int>(std::count_if(tokens.begin(), tokens.end(), [](const Token& token) {
+        return token.type == TokenType::END_OF_FILE;
+    }));
+    const int lexicalTokenCount = static_cast<int>(tokens.size()) - eofTokenCount;
+    metrics.tokenCount = lexicalTokenCount;
+    metrics.lexicalErrors = static_cast<int>(lexer->getErrors().size());
     animatePhaseProgress(1);
     setPhaseState(0, "done", phaseTimer.elapsed());
-    logToConsole("  Found " + std::to_string(tokens.size()) + " tokens");
+    if (pipelineDiagram) {
+        pipelineDiagram->setPhaseStatus(0, "done", phaseTimer.elapsed(), lexicalTokenCount);
+    }
+    logToConsole("  Found " + std::to_string(lexicalTokenCount) +
+                 " lexical tokens (" + std::to_string(eofTokenCount) + " EOF marker)");
     updateTokenTable();
-    updateSymbolTable();
+    if (tokenChart) {
+        tokenChart->setTokens(tokens);
+    }
     
     if (!lexer->getErrors().empty()) {
         logToConsole("  Lexical errors found: " + std::to_string(lexer->getErrors().size()));
@@ -922,12 +1153,28 @@ void MainWindow::onCompile() {
     logToConsole("\n[PHASE 2] Syntax Analysis (Rightmost Derivation)...");
     parser->setTokens(tokens);
     bool parseSuccess = parser->parse();
+    metrics.parserTime = std::chrono::milliseconds(phaseTimer.elapsed());
+    metrics.derivationSteps = static_cast<int>(parser->getDerivationSteps().size());
+    metrics.syntaxErrors = static_cast<int>(parser->getErrors().size());
     animatePhaseProgress(2);
     setPhaseState(1, "done", phaseTimer.elapsed());
+    if (pipelineDiagram) {
+        pipelineDiagram->setPhaseStatus(1, "done", phaseTimer.elapsed(), metrics.derivationSteps);
+    }
     logToConsole("  Generated " + std::to_string(parser->getDerivationSteps().size()) + " derivation steps");
     
     derivationViewer->setDerivationSteps(parser->getDerivationSteps());
     parseTreeView->setParseTree(parser->getParseTree());
+    
+    // Update AST view with new TranslationUnit if available, otherwise use legacy AST
+    if (parser->getTranslationUnit()) {
+        astView->setAST(parser->getTranslationUnit());
+        // Count AST nodes (simplified)
+        metrics.astNodes = 50; // Placeholder - would need proper AST traversal
+    } else {
+        astView->setAST(parser->getAST());
+        metrics.astNodes = 30; // Placeholder
+    }
     
     if (!parser->getErrors().empty()) {
         logToConsole("  Parse errors found: " + std::to_string(parser->getErrors().size()));
@@ -995,9 +1242,24 @@ void MainWindow::onCompile() {
     setPhaseState(2, "active", -1);
     phaseTimer.restart();
     logToConsole("\n[PHASE 3] Semantic Analysis...");
-    bool semanticSuccess = semanticAnalyzer->analyze(parser->getAST());
+    
+    bool semanticSuccess = false;
+    if (parser->getTranslationUnit()) {
+        // Use new AST
+        semanticSuccess = semanticAnalyzer->analyze(parser->getTranslationUnit());
+    } else {
+        // Fallback to legacy AST
+        semanticSuccess = semanticAnalyzer->analyze(parser->getAST());
+    }
+    
+    metrics.semanticTime = std::chrono::milliseconds(phaseTimer.elapsed());
+    metrics.symbolTableEntries = static_cast<int>(semanticAnalyzer->getSymbolTable().getAllDeclaredSymbols().size());
+    metrics.semanticErrors = static_cast<int>(semanticAnalyzer->getErrors().size());
     animatePhaseProgress(3);
     setPhaseState(2, "done", phaseTimer.elapsed());
+    if (pipelineDiagram) {
+        pipelineDiagram->setPhaseStatus(2, "done", phaseTimer.elapsed(), metrics.symbolTableEntries);
+    }
     
     if (!semanticAnalyzer->getErrors().empty()) {
         logToConsole("  Semantic errors found: " + std::to_string(semanticAnalyzer->getErrors().size()));
@@ -1012,6 +1274,8 @@ void MainWindow::onCompile() {
         }
     }
 
+    updateSymbolTable();
+
     if (!semanticSuccess) {
         logToConsole("\n[ERROR] Compilation stopped due to semantic errors.");
         setPhaseState(2, "failed", phaseTimer.elapsed());
@@ -1024,10 +1288,28 @@ void MainWindow::onCompile() {
     setPhaseState(3, "active", -1);
     phaseTimer.restart();
     logToConsole("\n[PHASE 4] Intermediate Code Generation (TAC)...");
-    auto tacCode = tacGenerator->generate(parser->getAST());
+    
+    std::vector<TACInstruction> tacCode;
+    if (parser->getTranslationUnit()) {
+        // Use new AST
+        tacCode = tacGenerator->generate(parser->getTranslationUnit());
+    } else {
+        // Fallback to legacy AST
+        tacCode = tacGenerator->generate(parser->getAST());
+    }
+    
+    metrics.tacTime = std::chrono::milliseconds(phaseTimer.elapsed());
+    metrics.tacInstructions = static_cast<int>(tacCode.size());
     animatePhaseProgress(4);
     setPhaseState(3, "done", phaseTimer.elapsed());
+    if (pipelineDiagram) {
+        pipelineDiagram->setPhaseStatus(3, "done", phaseTimer.elapsed(), metrics.tacInstructions);
+    }
     logToConsole("  Generated " + std::to_string(tacCode.size()) + " TAC instructions");
+
+    if (lifetimeDiagram) {
+        lifetimeDiagram->setInstructions(tacCode);
+    }
     
     // PHASE 5: Optimization
     setPhaseState(4, "active", -1);
@@ -1037,10 +1319,20 @@ void MainWindow::onCompile() {
     auto optimizedTAC = optimizer->optimize(
         optimizationPanel->isConstantFoldingEnabled(),
         optimizationPanel->isDeadCodeEliminationEnabled(),
-        optimizationPanel->isCseEnabled()
+        optimizationPanel->isCseEnabled(),
+        optimizationPanel->isAlgebraicSimplificationEnabled(),
+        optimizationPanel->isCopyPropagationEnabled(),
+        optimizationPanel->isStrengthReductionEnabled()
     );
+    metrics.optimizationTime = std::chrono::milliseconds(phaseTimer.elapsed());
+    metrics.optimizedTacInstructions = static_cast<int>(optimizedTAC.size());
+    metrics.optimizationRatio = tacCode.size() > 0 ? 
+        ((static_cast<double>(tacCode.size() - optimizedTAC.size()) / tacCode.size()) * 100.0) : 0.0;
     animatePhaseProgress(5);
     setPhaseState(4, "done", phaseTimer.elapsed());
+    if (pipelineDiagram) {
+        pipelineDiagram->setPhaseStatus(4, "done", phaseTimer.elapsed(), metrics.optimizedTacInstructions);
+    }
     logToConsole("  Optimized from " + std::to_string(tacCode.size()) + 
                 " to " + std::to_string(optimizedTAC.size()) + " instructions");
     
@@ -1051,8 +1343,13 @@ void MainWindow::onCompile() {
     phaseTimer.restart();
     logToConsole("\n[PHASE 6] Target Code Generation...");
     auto assembly = codeGenerator->generate(optimizedTAC);
+    metrics.codegenTime = std::chrono::milliseconds(phaseTimer.elapsed());
+    metrics.assemblyInstructions = static_cast<int>(assembly.size());
     animatePhaseProgress(6);
     setPhaseState(5, "done", phaseTimer.elapsed());
+    if (pipelineDiagram) {
+        pipelineDiagram->setPhaseStatus(5, "done", phaseTimer.elapsed(), metrics.assemblyInstructions);
+    }
     logToConsole("  Generated " + std::to_string(assembly.size()) + " assembly instructions");
     
     // PHASE 7: Target Optimization
@@ -1061,13 +1358,69 @@ void MainWindow::onCompile() {
     logToConsole("\n[PHASE 7] Target Code Optimization...");
     targetOptimizer->setAssembly(assembly);
     auto optimizedAssembly = targetOptimizer->optimize();
+    metrics.targetOptTime = std::chrono::milliseconds(phaseTimer.elapsed());
+    metrics.optimizedAssemblyInstructions = static_cast<int>(optimizedAssembly.size());
+    metrics.compressionRatio = assembly.size() > 0 ? 
+        ((static_cast<double>(assembly.size() - optimizedAssembly.size()) / assembly.size()) * 100.0) : 0.0;
     animatePhaseProgress(7);
     setPhaseState(6, "done", phaseTimer.elapsed());
+    if (pipelineDiagram) {
+        pipelineDiagram->setPhaseStatus(6, "done", phaseTimer.elapsed(), metrics.optimizedAssemblyInstructions);
+    }
     logToConsole("  Optimized from " + std::to_string(assembly.size()) + 
                 " to " + std::to_string(optimizedAssembly.size()) + " instructions");
     
     // Update three-column view
     threeColumnView->setData(sourceCode, optimizedTAC, optimizedAssembly);
+    
+    // Update performance metrics
+    performanceMetrics->updateMetrics(metrics);
+
+    // Show the compile report card dialog after successful compilation.
+    CompileStats reportStats;
+    reportStats.tokenCount = metrics.tokenCount;
+    reportStats.derivationSteps = metrics.derivationSteps;
+    reportStats.astNodes = metrics.astNodes;
+    reportStats.tacBefore = metrics.tacInstructions;
+    reportStats.tacAfter = metrics.optimizedTacInstructions;
+    reportStats.assemblyLines = metrics.optimizedAssemblyInstructions;
+    reportStats.symbolCount = metrics.symbolTableEntries;
+    reportStats.sourceLines = sourceEditor->document()->blockCount();
+    reportStats.success = true;
+
+    if (auto* program = parser->getAST(); program && program->switchStmt) {
+        reportStats.caseCount = static_cast<int>(program->switchStmt->cases.size());
+        if (program->switchStmt->defaultCase) {
+            reportStats.caseCount += 1;
+        }
+    }
+
+    reportStats.phaseMs = {
+        metrics.lexerTime.count(),
+        metrics.parserTime.count(),
+        metrics.semanticTime.count(),
+        metrics.tacTime.count(),
+        metrics.optimizationTime.count(),
+        metrics.codegenTime.count(),
+        metrics.targetOptTime.count()
+    };
+    reportStats.phaseNames = {
+        "Lexical",
+        "Parser",
+        "Semantic",
+        "TAC",
+        "Optimize",
+        "CodeGen",
+        "TargetOpt"
+    };
+    reportStats.totalMs = 0;
+    for (const auto phaseMs : reportStats.phaseMs) {
+        reportStats.totalMs += phaseMs;
+    }
+
+    auto* reportDialog = new CompileReport(this);
+    reportDialog->setStats(reportStats);
+    reportDialog->animateIn();
     
     logToConsole("\n=== COMPILATION COMPLETED SUCCESSFULLY ===");
     statusLabel->setText("Compilation successful!");
@@ -1078,11 +1431,20 @@ void MainWindow::updateTokenTable() {
     tokenTable->setRowCount(0);
 
     const auto& tokens = lexer->getTokens();
+    int eofTokenCount = 0;
     for (const auto& token : tokens) {
+        const bool isEofToken = token.type == TokenType::END_OF_FILE;
+        if (isEofToken) {
+            ++eofTokenCount;
+        }
+
         int row = tokenTable->rowCount();
         tokenTable->insertRow(row);
         
-        QTableWidgetItem* lexItem = new QTableWidgetItem(QString::fromStdString(token.lexeme));
+        const QString lexeme = isEofToken && token.lexeme.empty()
+            ? QString("<EOF>")
+            : QString::fromStdString(token.lexeme);
+        QTableWidgetItem* lexItem = new QTableWidgetItem(lexeme);
         QTableWidgetItem* typeItem = new QTableWidgetItem(QString::fromStdString(token.typeToString()));
         QTableWidgetItem* lineItem = new QTableWidgetItem(QString::number(token.line));
         QTableWidgetItem* colItem = new QTableWidgetItem(QString::number(token.column));
@@ -1102,6 +1464,13 @@ void MainWindow::updateTokenTable() {
             typeItem->setForeground(QColor("#94A3B8")); // Grey
         }
 
+        if (isEofToken) {
+            lexItem->setForeground(QColor("#94A3B8"));
+            typeItem->setForeground(QColor("#94A3B8"));
+            lexItem->setFont(QFont("Consolas", 12, QFont::StyleItalic));
+            typeItem->setFont(QFont("Consolas", 12, QFont::StyleItalic));
+        }
+
         lexItem->setTextAlignment(Qt::AlignCenter);
         typeItem->setTextAlignment(Qt::AlignCenter);
         lineItem->setTextAlignment(Qt::AlignCenter);
@@ -1112,14 +1481,34 @@ void MainWindow::updateTokenTable() {
         tokenTable->setItem(row, 2, lineItem);
         tokenTable->setItem(row, 3, colItem);
     }
+
+    const int lexicalTokenCount = static_cast<int>(tokens.size()) - eofTokenCount;
+    tokenCountLabel->setText(QString("Lexical Tokens: %1 | EOF Markers: %2 | Total Rows: %3")
+        .arg(lexicalTokenCount)
+        .arg(eofTokenCount)
+        .arg(tokens.size()));
 }
 
 void MainWindow::updateSymbolTable() {
     symbolTable->setRowCount(0);
-    
-    const auto& symbols = lexer->getSymbolTable();
-    for (const auto& entry : symbols) {
-        const auto& sym = entry.second;
+
+    static const std::set<std::string> blockedSymbols = {
+        "include", "iostream", "using", "namespace", "std", "main",
+        "cin", "cout", "endl",
+        "switch", "case", "default", "break", "return",
+        "int", "float", "string", "void",
+        "true", "false", "NULL", "nullptr"
+    };
+
+    const auto& symbols = semanticAnalyzer->getSymbolTable().getAllDeclaredSymbols();
+    for (const auto& sym : symbols) {
+        if (sym.name.empty() || sym.type.empty()) {
+            continue;
+        }
+        if (blockedSymbols.find(sym.name) != blockedSymbols.end()) {
+            continue;
+        }
+
         int row = symbolTable->rowCount();
         symbolTable->insertRow(row);
         
@@ -1193,39 +1582,35 @@ void MainWindow::highlightError(int line, int column) {
     if (!block.isValid()) return;
     
     const int lineLen = block.text().length();
-    column = std::max(1, column);
-    int col0 = std::min(column - 1, std::max(0, lineLen));
+    const int clampedColumn = std::max(1, column);
+    const int caretCol0 = (lineLen > 0)
+        ? std::min(clampedColumn - 1, lineLen - 1)
+        : 0;
 
-    // Calculate exact position
-    int pos = block.position() + col0;
-    if (pos < block.position()) pos = block.position();
-    
-    // Find end of word/token
-    int endPos = pos;
-    QString text = sourceEditor->toPlainText();
-    while (endPos < text.length() &&
-           text[endPos] != '\n' &&
-           (text[endPos].isLetterOrNumber() || text[endPos] == '_')) {
-        endPos++;
-    }
-    if (endPos == pos) endPos++;  // At least select one char
-    
-    // Select the error token
     QTextCursor cursor(block);
-    cursor.setPosition(pos);
-    cursor.setPosition(endPos, QTextCursor::KeepAnchor);
+    cursor.setPosition(block.position() + caretCol0);
     sourceEditor->setTextCursor(cursor);
-    
-    // Ensure visible + centered
     sourceEditor->ensureCursorVisible();
     sourceEditor->setFocus();
-    
-    // Flash effect: highlight in red for 300ms
+
     QList<QTextEdit::ExtraSelection> selections;
-    QTextEdit::ExtraSelection sel;
-    sel.format.setBackground(QColor(224, 92, 106, 100));  // Translucent red
-    sel.cursor = cursor;
-    selections.append(sel);
+    QTextEdit::ExtraSelection lineSelection;
+    lineSelection.format.setBackground(QColor(224, 92, 106, 56));
+    lineSelection.format.setProperty(QTextFormat::FullWidthSelection, true);
+    lineSelection.cursor = QTextCursor(block);
+    selections.append(lineSelection);
+
+    if (lineLen > 0) {
+        QTextEdit::ExtraSelection tokenSelection;
+        tokenSelection.format.setUnderlineColor(QColor("#E05C6A"));
+        tokenSelection.format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+        QTextCursor tokenCursor(block);
+        tokenCursor.setPosition(block.position() + caretCol0);
+        tokenCursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
+        tokenSelection.cursor = tokenCursor;
+        selections.append(tokenSelection);
+    }
+
     sourceEditor->setExtraSelectionsMerged(selections);
     
     // Clear highlight after 300ms
@@ -1272,20 +1657,21 @@ void MainWindow::performRealTimeParse() {
         editorErrorTable->setRowCount(0);
         std::vector<EditorError> errors;
         for (const auto& err : lexerErrors) {
+            const int safeLine = std::max(1, err.line);
+            const int safeCol = std::max(1, err.column);
             int row = editorErrorTable->rowCount();
             editorErrorTable->insertRow(row);
-            editorErrorTable->setItem(row, 0, new QTableWidgetItem(QString::number(err.line)));
-            editorErrorTable->setItem(row, 1, new QTableWidgetItem(QString::number(err.column)));
+            editorErrorTable->setItem(row, 0, new QTableWidgetItem(QString::number(safeLine)));
+            editorErrorTable->setItem(row, 1, new QTableWidgetItem(QString::number(safeCol)));
             editorErrorTable->setItem(row, 2, new QTableWidgetItem("Lexer"));
             QString msg = QString("Error in line %1: %2")
-                .arg(err.line)
+                .arg(safeLine)
                 .arg(QString::fromStdString(err.message));
             editorErrorTable->setItem(row, 3, new QTableWidgetItem(msg));
             
-            const int lineLen = safeLineLen(err.line);
-            const int startCol = std::max(1, std::min(err.column, lineLen));
-            const int endCol = std::min(lineLen, startCol + 1);
-            errors.emplace_back(err.line, startCol, endCol, msg.toStdString());
+            const int lineLen = safeLineLen(safeLine);
+            const int startCol = std::max(1, std::min(safeCol, lineLen));
+            errors.emplace_back(safeLine, startCol, startCol, msg.toStdString());
         }
         sourceEditor->setErrors(errors);
         statusLabel->setText(QString("Ready (Errors: %1)").arg(lexerErrors.size()));
@@ -1301,10 +1687,12 @@ void MainWindow::performRealTimeParse() {
     std::vector<EditorError> errors;
     
     for (const auto& err : parserErrors) {
+        const int safeLine = std::max(1, err.line);
+        const int safeCol = std::max(1, err.column);
         int row = editorErrorTable->rowCount();
         editorErrorTable->insertRow(row);
-        editorErrorTable->setItem(row, 0, new QTableWidgetItem(QString::number(err.line)));
-        editorErrorTable->setItem(row, 1, new QTableWidgetItem(QString::number(err.column)));
+        editorErrorTable->setItem(row, 0, new QTableWidgetItem(QString::number(safeLine)));
+        editorErrorTable->setItem(row, 1, new QTableWidgetItem(QString::number(safeCol)));
         const std::string& msg = err.message;
         QString category = "Syntax";
         if (msg.find("main") != std::string::npos || msg.find("#include") != std::string::npos) {
@@ -1323,14 +1711,14 @@ void MainWindow::performRealTimeParse() {
         } else if (uiMessage.contains("switch", Qt::CaseInsensitive)) {
             uiMessage += " | Suggestion: ensure one valid `switch (expr) { ... }` exists.";
         }
-        uiMessage = QString("Error in line %1: %2").arg(err.line).arg(uiMessage);
+        uiMessage = QString("Error in line %1: %2").arg(safeLine).arg(uiMessage);
         editorErrorTable->setItem(row, 3, new QTableWidgetItem(uiMessage));
         
-        const int lineLen = safeLineLen(err.line);
-        const int startCol = std::max(1, std::min(err.column, lineLen));
+        const int lineLen = safeLineLen(safeLine);
+        const int startCol = std::max(1, std::min(safeCol, lineLen));
         const int tokenLen = std::max(1, static_cast<int>(err.found.size()));
         const int endCol = std::min(lineLen, startCol + tokenLen - 1);
-        errors.emplace_back(err.line, startCol, endCol, uiMessage.toStdString());
+        errors.emplace_back(safeLine, startCol, std::max(startCol, endCol), uiMessage.toStdString());
     }
     
     sourceEditor->setErrors(errors);

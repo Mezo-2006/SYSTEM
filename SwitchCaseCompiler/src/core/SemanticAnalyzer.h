@@ -41,6 +41,7 @@ private:
     };
     
     std::vector<std::map<std::string, Symbol>> scopes;
+    std::vector<SymbolTableEntry> declarationHistory;
     int currentScope;
     
 public:
@@ -58,6 +59,7 @@ public:
     
     int getCurrentScope() const { return currentScope; }
     const std::vector<std::map<std::string, Symbol>>& getAllScopes() const { return scopes; }
+    const std::vector<SymbolTableEntry>& getAllDeclaredSymbols() const { return declarationHistory; }
 };
 
 // Semantic Analyzer using visitor pattern
@@ -75,12 +77,25 @@ public:
     SemanticAnalyzer();
     
     bool analyze(Program* program);
+    bool analyze(TranslationUnit* tu);
     
     const std::vector<SemanticError>& getErrors() const { return errors; }
     const ScopedSymbolTable& getSymbolTable() const { return symbolTable; }
     bool hasErrors() const { return !errors.empty(); }
     
-    // Visitor methods
+    // New visitor methods
+    void visit(TranslationUnit* node) override;
+    void visit(FunctionDecl* node) override;
+    void visit(CompoundStmt* node) override;
+    void visit(DeclStmt* node) override;
+    void visit(VarDecl* node) override;
+    void visit(DeclRefExpr* node) override;
+    void visit(IntegerLiteral* node) override;
+    void visit(BreakStmt* node) override;
+    void visit(ReturnStmt* node) override;
+    void visit(CaseStmt* node) override;
+    
+    // Legacy visitor methods
     void visit(Program* node) override;
     void visit(SwitchStatement* node) override;
     void visit(CaseClause* node) override;

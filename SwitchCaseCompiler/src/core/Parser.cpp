@@ -46,6 +46,27 @@ void Parser::setTokens(const std::vector<Token>& tokenStream) {
     hasUsingNamespaceStd = false;
     usesMainWrapper = false;
     parsedReturnValue = 0;
+
+    if (tokens.empty()) {
+        eofToken = Token(TokenType::END_OF_FILE, "", 1, 1);
+        return;
+    }
+
+    const Token& last = tokens.back();
+    if (last.type == TokenType::END_OF_FILE) {
+        eofToken = last;
+        if (eofToken.line <= 0) {
+            eofToken.line = 1;
+        }
+        if (eofToken.column <= 0) {
+            eofToken.column = 1;
+        }
+        return;
+    }
+
+    const int eofLine = std::max(1, last.line);
+    const int eofColumn = std::max(1, last.column + static_cast<int>(last.lexeme.size()));
+    eofToken = Token(TokenType::END_OF_FILE, "", eofLine, eofColumn);
 }
 
 Token& Parser::currentToken() {
@@ -152,6 +173,11 @@ bool Parser::parse() {
 
     if (!match(TokenType::END_OF_FILE)) {
         addError("Unexpected tokens after end of program");
+    }
+    
+    // Build new TranslationUnit AST from legacy Program AST
+    if (useNewAST && astRoot) {
+        translationUnit = convertToTranslationUnit(astRoot.get());
     }
     
     // Run validation checks
@@ -474,9 +500,20 @@ std::unique_ptr<CaseClause> Parser::parseCaseClause() {
     consume(TokenType::CASE, "Expected 'case'");
     
     int caseValue = 0;
+    bool isNegative = false;
+    
+    // Handle negative constants: case -5:
+    if (match(TokenType::MINUS)) {
+        isNegative = true;
+        advance();
+    }
+    
     if (match(TokenType::CONSTANT)) {
         if (!tryParseInt(currentToken().lexeme, caseValue)) {
             addError("Case value is out of integer range");
+        }
+        if (isNegative) {
+            caseValue = -caseValue;
         }
         advance();
     } else {
@@ -1185,4 +1222,187 @@ std::string Parser::reconstructSourceFromParseTree() const {
     
     collectTerminals(parseTree.get());
     return result;
+}
+
+
+// ============================================================================
+// AST Conversion: Program -> TranslationUnit
+// ============================================================================
+
+std::unique_ptr<TranslationUnit> Parser::convertToTranslationUnit(Program* program) {
+    if (!program) return nullptr;
+    
+    auto tu = std::make_unique<TranslationUnit>();
+    auto mainFunc = std::make_unique<FunctionDecl>("main", "int");
+    auto body = std::make_unique<CompoundStmt>();
+    
+    // Convert pre-switch statements
+    for (auto& stmt : program->preSwitchStatements) {
+        auto converted = convertStatement(stmt.get());
+        if (converted) {
+            body->statements.push_back(std::move(converted));
+        }
+    }
+    
+    // Convert switch statement
+    if (program->switchStmt) {
+        auto switchStmt = std::make_unique<SwitchStatement>(
+            convertExpression(program->switchStmt->condition.get()),
+            program->switchStmt->line,
+            program->switchStmt->column
+        );
+        
+        // Create CompoundStmt for switch body
+        auto switchBody = std::make_unique<CompoundStmt>();
+        
+        // Convert cases to CaseStmt
+        for (auto& caseClause : program->switchStmt->cases) {
+            auto caseStmt = std::make_unique<CaseStmt>(
+                caseClause->caseValue,
+                caseClause->line,
+                caseClause->column
+            );
+            
+            // Convert statements in case
+            for (auto& stmt : caseClause->statements) {
+                auto converted = convertStatement(stmt.get());
+                if (converted) {
+                    caseStmt->statements.push_back(std::move(converted));
+                }
+            }
+            
+            // Add break statement
+            caseStmt->statements.push_back(std::make_unique<BreakStmt>(
+                caseClause->line, caseClause->column
+            ));
+            caseStmt->hasBreak = true;
+            
+            switchBody->statements.push_back(std::move(caseStmt));
+        }
+        
+        // Convert default case
+        if (program->switchStmt->defaultCase) {
+            auto defaultStmt = std::make_unique<CaseStmt>(
+                true,
+                program->switchStmt->defaultCase->line,
+                program->switchStmt->defaultCase->column
+            );
+            
+            for (auto& stmt : program->switchStmt->defaultCase->statements) {
+                auto converted = convertStatement(stmt.get());
+                if (converted) {
+                    defaultStmt->statements.push_back(std::move(converted));
+                }
+            }
+            
+            defaultStmt->statements.push_back(std::make_unique<BreakStmt>(
+                program->switchStmt->defaultCase->line,
+                program->switchStmt->defaultCase->column
+            ));
+            defaultStmt->hasBreak = true;
+            
+            switchBody->statements.push_back(std::move(defaultStmt));
+        }
+        
+        switchStmt->body = std::move(switchBody);
+        body->statements.push_back(std::move(switchStmt));
+    }
+    
+    // Add return statement
+    body->statements.push_back(std::make_unique<ReturnStmt>(
+        std::make_unique<IntegerLiteral>(parsedReturnValue)
+    ));
+    
+    mainFunc->body = std::move(body);
+    tu->mainFunction = std::move(mainFunc);
+    
+    return tu;
+}
+
+std::unique_ptr<Expression> Parser::convertExpression(Expression* expr) {
+    if (!expr) return nullptr;
+    
+    if (auto* binExpr = dynamic_cast<BinaryExpression*>(expr)) {
+        return std::make_unique<BinaryExpression>(
+            binExpr->op,
+            convertExpression(binExpr->left.get()),
+            convertExpression(binExpr->right.get()),
+            binExpr->line,
+            binExpr->column
+        );
+    }
+    
+    if (auto* ident = dynamic_cast<Identifier*>(expr)) {
+        return std::make_unique<DeclRefExpr>(
+            ident->name,
+            ident->annotatedType,
+            ident->line,
+            ident->column
+        );
+    }
+    
+    if (auto* constant = dynamic_cast<Constant*>(expr)) {
+        return std::make_unique<IntegerLiteral>(
+            constant->value,
+            constant->line,
+            constant->column
+        );
+    }
+    
+    if (auto* strLit = dynamic_cast<StringLiteral*>(expr)) {
+        return std::make_unique<StringLiteral>(
+            strLit->value,
+            strLit->line,
+            strLit->column
+        );
+    }
+    
+    return nullptr;
+}
+
+std::unique_ptr<Statement> Parser::convertStatement(Statement* stmt) {
+    if (!stmt) return nullptr;
+    
+    if (auto* declStmt = dynamic_cast<DeclarationStatement*>(stmt)) {
+        auto varDecl = std::make_unique<VarDecl>(
+            declStmt->variableType,
+            declStmt->variableName,
+            convertExpression(declStmt->initializer.get()),
+            declStmt->line,
+            declStmt->column
+        );
+        
+        return std::make_unique<DeclStmt>(
+            std::move(varDecl),
+            declStmt->line,
+            declStmt->column
+        );
+    }
+    
+    if (auto* assignStmt = dynamic_cast<AssignmentStatement*>(stmt)) {
+        return std::make_unique<AssignmentStatement>(
+            assignStmt->variableName,
+            convertExpression(assignStmt->expression.get()),
+            assignStmt->line,
+            assignStmt->column
+        );
+    }
+    
+    if (auto* cinStmt = dynamic_cast<CinStatement*>(stmt)) {
+        return std::make_unique<CinStatement>(
+            cinStmt->variableName,
+            cinStmt->line,
+            cinStmt->column
+        );
+    }
+    
+    if (auto* coutStmt = dynamic_cast<CoutStatement*>(stmt)) {
+        return std::make_unique<CoutStatement>(
+            convertExpression(coutStmt->expression.get()),
+            coutStmt->line,
+            coutStmt->column
+        );
+    }
+    
+    return nullptr;
 }
