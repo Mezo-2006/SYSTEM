@@ -1,95 +1,32 @@
-import sys
+import re
 
-cpp_code = r"""#include "OptimizationPanel.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QFont>
-#include <QGroupBox>
-#include <QHeaderView>
+with open(r'c:\Users\Mizo\OneDrive - Arab Academy for Science and Technology\Desktop\SYSTEM\SwitchCaseCompiler\src\gui\OptimizationPanel.cpp', 'r', encoding='utf-8') as f:
+    text = f.read()
 
-OptimizationPanel::OptimizationPanel(QWidget* parent) : QWidget(parent) {       
-    setStyleSheet(
-        "OptimizationPanel { background-color: #0F172A; }"
+# Update the style sheet
+css_pattern = r"setStyleSheet\([\s\S]*?check\.svg\); }\"\n    \);"
+css_replacement = r"""setStyleSheet(
+        "OptimizationPanel { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #111827, stop:1 #0F172A); }"
         "QGroupBox {"
-        "  color: #94A3B8; font-weight: bold; border: 1px solid #334155; border-radius: 6px; margin-top: 10px;"
+        "  color: #38BDF8; font-weight: bold; border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 8px; margin-top: 15px; background: rgba(30, 41, 59, 0.6);"
         "}"
-        "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; }"
+        "QGroupBox::title { subcontrol-origin: margin; left: 15px; padding: 0 8px; color: #7DD3FC; background-color: transparent; border-radius: 4px; }"
         "QCheckBox {"
-        "  color: #E2E8F0; font-size: 14px; padding: 5px;"
+        "  color: #E2E8F0; font-size: 13px; padding: 6px; font-weight: bold; background: transparent;"
         "}"
-        "QCheckBox::indicator { width: 18px; height: 18px; }"
-    );
-    setupUI();
-}
+        "QCheckBox:hover { color: #38BDF8; }"
+        "QCheckBox::indicator { width: 16px; height: 16px; border-radius: 4px; border: 2px solid #64748B; background: rgba(15, 23, 42, 0.8); }"
+        "QCheckBox::indicator:checked { background-color: #3B82F6; border-color: #3B82F6; image: url(:/icons/check.svg); }"
+    );"""
 
-bool OptimizationPanel::isConstantFoldingEnabled() const {
-    return constantFoldingCheckbox && constantFoldingCheckbox->isChecked();     
-}
+text = re.sub(css_pattern, css_replacement, text)
 
-bool OptimizationPanel::isDeadCodeEliminationEnabled() const {
-    return deadCodeCheckbox && deadCodeCheckbox->isChecked();
-}
-
-bool OptimizationPanel::isCseEnabled() const {
-    return cseCheckbox && cseCheckbox->isChecked();
-}
-
-void OptimizationPanel::setupUI() {
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-
-    // Optimization controls
-    QGroupBox* controlGroup = new QGroupBox("Optimization Toggles:");
-    QHBoxLayout* controlLayout = new QHBoxLayout(controlGroup);
-    controlLayout->setContentsMargins(15, 15, 15, 15);
-
-    constantFoldingCheckbox = new QCheckBox("🧮 Constant Folding");
-    constantFoldingCheckbox->setChecked(true);
-    deadCodeCheckbox = new QCheckBox("🗑️ Dead Code Elimination");
-    deadCodeCheckbox->setChecked(true);
-    cseCheckbox = new QCheckBox("🔄 Common Subexpression Elimination");
-    cseCheckbox->setChecked(true);
-
-    controlLayout->addWidget(constantFoldingCheckbox);
-    controlLayout->addWidget(deadCodeCheckbox);
-    controlLayout->addWidget(cseCheckbox);
-    controlLayout->addStretch();
-
-    mainLayout->addWidget(controlGroup);
-
-    // Before/After display
-    QHBoxLayout* compareLayout = new QHBoxLayout();
-
-    QString tableStyle = R"(
-        QTableWidget {
-            background-color: #1E293B;
-            alternate-background-color: #0F172A;
-            color: #E2E8F0;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
-        }
-        QHeaderView::section {
-            background-color: #0F172A;
-            color: #94A3B8;
-            padding: 5px;
-            border: none;
-            border-bottom: 2px solid #334155;
-            font-weight: bold;
-            text-align: left;
-        }
-        QTableWidget::item {
-            padding: 4px;
-            border-bottom: 1px solid #1E293B;
-        }
-    )";
-
-    // Before panel
+# Update Headers
+header_pattern = r"// Before panel[\s\S]*?CompareLayout->addLayout\(afterLayout, 1\);"
+header_replacement = r"""// Before panel
     QVBoxLayout* beforeLayout = new QVBoxLayout();
-    QLabel* bLabel = new QLabel("📋 Before Optimization:");
-    bLabel->setStyleSheet("color: #94A3B8; font-weight: bold; font-size: 14px; margin-bottom: 5px;");
+    QLabel* bLabel = new QLabel("📋 Before Optimization");
+    bLabel->setStyleSheet("color: white; font-weight: bold; font-size: 15px; margin-bottom: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #991b1b, stop:1 #7f1d1d); padding: 8px 12px; border-radius: 6px; border-left: 4px solid #ef4444; letter-spacing: 1px;");
     beforeLayout->addWidget(bLabel);
     
     beforeTable = new QTableWidget();
@@ -99,13 +36,17 @@ void OptimizationPanel::setupUI() {
     beforeTable->horizontalHeader()->setStretchLastSection(true);
     beforeTable->verticalHeader()->setVisible(false);
     beforeTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    beforeTable->setSelectionMode(QAbstractItemView::NoSelection);
     beforeTable->setShowGrid(false);
-    beforeLayout->addWidget(beforeTable);
+    beforeTable->setAlternatingRowColors(true);
+    beforeTable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    beforeTable->setMinimumHeight(300);
+    beforeLayout->addWidget(beforeTable, 1);
 
     // After panel
     QVBoxLayout* afterLayout = new QVBoxLayout();
-    QLabel* aLabel = new QLabel("✨ After Optimization:");
-    aLabel->setStyleSheet("color: #10B981; font-weight: bold; font-size: 14px; margin-bottom: 5px;");
+    QLabel* aLabel = new QLabel("✨ After Optimization");
+    aLabel->setStyleSheet("color: white; font-weight: bold; font-size: 15px; margin-bottom: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #064e3b, stop:1 #065f46); padding: 8px 12px; border-radius: 6px; border-left: 4px solid #10b981; letter-spacing: 1px;");
     afterLayout->addWidget(aLabel);
     
     afterTable = new QTableWidget();
@@ -115,96 +56,17 @@ void OptimizationPanel::setupUI() {
     afterTable->horizontalHeader()->setStretchLastSection(true);
     afterTable->verticalHeader()->setVisible(false);
     afterTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    afterTable->setSelectionMode(QAbstractItemView::NoSelection);
     afterTable->setShowGrid(false);
-    afterLayout->addWidget(afterTable);
+    afterTable->setAlternatingRowColors(true);
+    afterTable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    afterTable->setMinimumHeight(300);
+    afterLayout->addWidget(afterTable, 1);
 
-    compareLayout->addLayout(beforeLayout);
-    compareLayout->addLayout(afterLayout);
-    
-    mainLayout->addLayout(compareLayout);
-}
+    compareLayout->addLayout(beforeLayout, 1);
+    compareLayout->addLayout(afterLayout, 1);"""
 
-void OptimizationPanel::setOptimizationResults(
-    const std::vector<OptimizationResult>& optimizationResults) {
+text = re.sub(r'// Before panel.*?compareLayout->addLayout\(afterLayout, 1\);', header_replacement, text, flags=re.DOTALL)
 
-    results = optimizationResults;
-    displayResults();
-}
-
-void OptimizationPanel::displayResults() {
-    beforeTable->setRowCount(0);
-    afterTable->setRowCount(0);
-
-    if (results.empty()) {
-        beforeTable->setRowCount(1);
-        QTableWidgetItem* emptyBefore = new QTableWidgetItem("No optimizations recorded.");
-        emptyBefore->setForeground(QColor("#64748B"));
-        beforeTable->setItem(0, 0, emptyBefore);
-        
-        afterTable->setRowCount(1);
-        QTableWidgetItem* emptyAfter = new QTableWidgetItem("Compile code to view optimizations.");
-        emptyAfter->setForeground(QColor("#64748B"));
-        afterTable->setItem(0, 0, emptyAfter);
-        return;
-    }
-
-    int bRow = 0;
-    int aRow = 0;
-
-    for (const auto& result : results) {
-        // Headers for before
-        beforeTable->insertRow(bRow);
-        QTableWidgetItem* bHeader = new QTableWidgetItem("=== " + QString::fromStdString(result.optimizationName) + " ===");
-        bHeader->setForeground(QColor("#FBBF24"));
-        QFont f = bHeader->font(); f.setBold(true); bHeader->setFont(f);
-        beforeTable->setItem(bRow++, 0, bHeader);
-        
-        // Headers for after
-        afterTable->insertRow(aRow);
-        QTableWidgetItem* aHeader = new QTableWidgetItem("=== " + QString::fromStdString(result.optimizationName) + " ===");
-        aHeader->setForeground(QColor("#34D399"));
-        aHeader->setFont(f);
-        afterTable->setItem(aRow++, 0, aHeader);
-
-        for (const auto& inst : result.before) {
-            beforeTable->insertRow(bRow);
-            QTableWidgetItem* item = new QTableWidgetItem(QString::fromStdString(inst.toString()));
-            
-            // If we are doing Dead code elimination and it's removed, we'll mark the extra ones in red/strikethrough later if we could match them exactly,
-            // For now, let's keep them styled standard before format
-            item->setForeground(QColor("#94A3B8"));
-            beforeTable->setItem(bRow++, 0, item);
-        }
-        
-        // Add removed instructions spacer
-        beforeTable->insertRow(bRow);
-        QTableWidgetItem* bSpacer = new QTableWidgetItem(QString("↳ Removed: %1 instructions").arg(result.removedInstructions));
-        bSpacer->setForeground(QColor("#F87171"));
-        QFont iFont = bSpacer->font(); iFont.setItalic(true); bSpacer->setFont(iFont);
-        beforeTable->setItem(bRow++, 0, bSpacer);
-        
-        beforeTable->insertRow(bRow);
-        beforeTable->setItem(bRow++, 0, new QTableWidgetItem(""));
-
-        for (const auto& inst : result.after) {
-            afterTable->insertRow(aRow);
-            QTableWidgetItem* item = new QTableWidgetItem(QString::fromStdString(inst.toString()));
-            item->setForeground(QColor("#E2E8F0"));
-            afterTable->setItem(aRow++, 0, item);
-        }
-        
-        // Match lengths to keep diff aligned
-        while (aRow < bRow) {
-            afterTable->insertRow(aRow);
-            afterTable->setItem(aRow++, 0, new QTableWidgetItem(""));
-        }
-        while (bRow < aRow) {
-            beforeTable->insertRow(bRow);
-            beforeTable->setItem(bRow++, 0, new QTableWidgetItem(""));
-        }
-    }
-}
-"""
-
-with open(r'c:\Users\Mizo\OneDrive - Arab Academy for Science and Technology\Desktop\systems 2\SwitchCaseCompiler\src\gui\OptimizationPanel.cpp', 'w', encoding='utf-8') as f:
-    f.write(cpp_code)
+with open(r'c:\Users\Mizo\OneDrive - Arab Academy for Science and Technology\Desktop\SYSTEM\SwitchCaseCompiler\src\gui\OptimizationPanel.cpp', 'w', encoding='utf-8') as f:
+    f.write(text)

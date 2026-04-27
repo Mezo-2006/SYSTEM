@@ -234,57 +234,150 @@ void ThreeColumnView::setData(const std::string& source,
     }
     sourceColumn->setHtml(sourceHtml);
 
-    // Display TAC in Tables
-    auto populateTacTable = [](QTableWidget* table, const std::vector<TACInstruction>& tacList, bool isOptimized) {
-        table->setRowCount(0);
-        table->setRowCount(tacList.size());
-        for (size_t i = 0; i < tacList.size(); i++) {
-            const auto& inst = tacList[i];
-            
-            QTableWidgetItem* numItem = new QTableWidgetItem(QString::number(i + 1));
-            numItem->setTextAlignment(Qt::AlignCenter);
-            numItem->setForeground(QColor("#64748B"));
-            if (isOptimized) {
-                numItem->setBackground(QColor("#064E3B")); // Dark green hint for optimized
+    // Diff logic for side-by-side TAC tables
+    int m = originalTac.size(), n = optimizedTac.size();
+    std::vector<std::vector<int>> dp(m + 1, std::vector<int>(n + 1, 0));
+    
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (originalTac[i-1].toString() == optimizedTac[j-1].toString()) {
+                dp[i][j] = dp[i-1][j-1] + 1;
             } else {
-                numItem->setBackground(QColor("#451A03")); // Dark orange/red hint for original
+                dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);
             }
-            
-            QString opStr = QString::fromStdString(inst.opcodeToString());
-            QTableWidgetItem* opItem = new QTableWidgetItem(opStr);
-            if (inst.opcode == TACOpcode::LABEL) {
-                opItem->setForeground(QColor("#FBBF24")); // Label gold
-            } else if (inst.opcode == TACOpcode::GOTO || inst.opcode == TACOpcode::IF_GOTO || inst.opcode == TACOpcode::IF_FALSE_GOTO) {
-                opItem->setForeground(QColor("#F472B6")); // Flow control pink
-            } else {
-                opItem->setForeground(QColor("#C084FC")); // Opcode purple
-            }
-            
-            QTableWidgetItem* resItem = new QTableWidgetItem(QString::fromStdString(inst.result));
-            resItem->setForeground(QColor("#60A5FA")); // Result blue
-            
-            QTableWidgetItem* arg1Item = new QTableWidgetItem(QString::fromStdString(inst.arg1));
-            arg1Item->setForeground(QColor("#34D399")); // Arg green
-            
-            QTableWidgetItem* arg2Item = new QTableWidgetItem(QString::fromStdString(inst.arg2));
-            arg2Item->setForeground(QColor("#34D399")); // Arg green
-            
-            if (inst.opcode == TACOpcode::LABEL) {
-                resItem->setText(QString::fromStdString(inst.result));
-                resItem->setForeground(QColor("#FBBF24"));
-                opItem->setText("LABEL");
-            }
+        }
+    }
+    
+    std::vector<int> alignOrig, alignOpt;
+    int i = m, j = n;
+    
+    while (i > 0 && j > 0) {
+        if (originalTac[i-1].toString() == optimizedTac[j-1].toString()) {
+            alignOrig.push_back(i-1);
+            alignOpt.push_back(j-1);
+            i--; j--;
+        } else if (dp[i-1][j] > dp[i][j-1]) {
+            alignOrig.push_back(i-1);
+            alignOpt.push_back(-1);
+            i--;
+        } else {
+            alignOrig.push_back(-1);
+            alignOpt.push_back(j-1);
+            j--;
+        }
+    }
+    while (i > 0) {
+        alignOrig.push_back(i-1);
+        alignOpt.push_back(-1);
+        i--;
+    }
+    while (j > 0) {
+        alignOrig.push_back(-1);
+        alignOpt.push_back(j-1);
+        j--;
+    }
+    
+    std::reverse(alignOrig.begin(), alignOrig.end());
+    std::reverse(alignOpt.begin(), alignOpt.end());
 
-            table->setItem(i, 0, numItem);
-            table->setItem(i, 1, opItem);
-            table->setItem(i, 2, resItem);
-            table->setItem(i, 3, arg1Item);
-            table->setItem(i, 4, arg2Item);
+    int totalRows = alignOrig.size();
+    originalTacTable->setRowCount(totalRows);
+    tacTable->setRowCount(totalRows);
+
+    auto createEmptyRow = [](QTableWidget* table, int row) {
+        for (int c = 0; c < 5; ++c) {
+            QTableWidgetItem* item = new QTableWidgetItem("");
+            item->setBackground(QColor("#1E293B"));
+            table->setItem(row, c, item);
         }
     };
 
-    populateTacTable(originalTacTable, originalTac, false);
-    populateTacTable(tacTable, optimizedTac, true);
+    auto fillRow = [](QTableWidget* table, int row, const TACInstruction& inst, bool isOptimized, bool isModified) {
+        QTableWidgetItem* numItem = new QTableWidgetItem(QString::number(row + 1));
+        numItem->setTextAlignment(Qt::AlignCenter);
+        numItem->setForeground(QColor("#64748B"));
+        
+        QColor bgColor = isOptimized ? QColor("#064E3B") : QColor("#451A03");
+        if (isModified) {
+            bgColor = isOptimized ? QColor("#059669") : QColor("#DC2626"); // brighter green for new, red for removed
+        }
+        
+        numItem->setBackground(bgColor);
+        
+        QString opStr = QString::fromStdString(inst.opcodeToString());
+        QTableWidgetItem* opItem = new QTableWidgetItem(opStr);
+        if (inst.opcode == TACOpcode::LABEL) {
+            opStr = "LABEL";
+            opItem->setText(opStr);
+            opItem->setForeground(QColor("#FBBF24")); 
+        } else if (inst.opcode == TACOpcode::GOTO || inst.opcode == TACOpcode::IF_GOTO || inst.opcode == TACOpcode::IF_FALSE_GOTO) {
+            opItem->setForeground(QColor("#F472B6")); 
+        } else {
+            opItem->setForeground(QColor("#C084FC")); 
+        }
+        
+        QTableWidgetItem* resItem = new QTableWidgetItem(QString::fromStdString(inst.result));
+        if (inst.opcode == TACOpcode::LABEL) {
+            resItem->setForeground(QColor("#FBBF24"));
+        } else {
+            resItem->setForeground(QColor("#60A5FA")); 
+        }
+        
+        QTableWidgetItem* arg1Item = new QTableWidgetItem(QString::fromStdString(inst.arg1));
+        arg1Item->setForeground(QColor("#34D399")); 
+        
+        QTableWidgetItem* arg2Item = new QTableWidgetItem(QString::fromStdString(inst.arg2));
+        arg2Item->setForeground(QColor("#34D399")); 
+        
+        if (isModified && !isOptimized) {
+            // Strike-out removed instructions
+            QFont strike = opItem->font();
+            strike.setStrikeOut(true);
+            opItem->setFont(strike);
+            resItem->setFont(strike);
+            arg1Item->setFont(strike);
+            arg2Item->setFont(strike);
+        } else if (isModified && isOptimized) {
+            // Bold new instructions
+            QFont bold = opItem->font();
+            bold.setBold(true);
+            opItem->setFont(bold);
+            resItem->setFont(bold);
+            arg1Item->setFont(bold);
+            arg2Item->setFont(bold);
+        }
+
+        table->setItem(row, 0, numItem);
+        table->setItem(row, 1, opItem);
+        table->setItem(row, 2, resItem);
+        table->setItem(row, 3, arg1Item);
+        table->setItem(row, 4, arg2Item);
+
+        // subtle background color for the row fields if modified
+        if (isModified) {
+            QColor rowBg = isOptimized ? QColor("#064E3B") : QColor("#4a1f1f"); // dark green or dark red
+            for(int c=1; c<5; ++c) {
+                if(table->item(row, c)) table->item(row, c)->setBackground(rowBg);
+            }
+        }
+    };
+
+    for (int r = 0; r < totalRows; ++r) {
+        int origIdx = alignOrig[r];
+        int optIdx = alignOpt[r];
+        
+        if (origIdx != -1) {
+            fillRow(originalTacTable, r, originalTac[origIdx], false, optIdx == -1);
+        } else {
+            createEmptyRow(originalTacTable, r);
+        }
+        
+        if (optIdx != -1) {
+            fillRow(tacTable, r, optimizedTac[optIdx], true, origIdx == -1);
+        } else {
+            createEmptyRow(tacTable, r);
+        }
+    }
     
     // Pass to IR Flow Diagram (Show before/after optimization diff visually)
     irFlowDiagram->setOptimizedTAC(originalTac, optimizedTac);

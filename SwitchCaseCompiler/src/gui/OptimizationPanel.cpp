@@ -8,15 +8,16 @@
 
 OptimizationPanel::OptimizationPanel(QWidget* parent) : QWidget(parent) {
     setStyleSheet(
-        "OptimizationPanel { background-color: #0F172A; }"
+        "OptimizationPanel { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #111827, stop:1 #0F172A); }"
         "QGroupBox {"
-        "  color: #38BDF8; font-weight: bold; border: 1px solid #334155; border-radius: 8px; margin-top: 15px; background-color: #1E293B;"
+        "  color: #38BDF8; font-weight: bold; border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 8px; margin-top: 15px; background: rgba(30, 41, 59, 0.6);"
         "}"
-        "QGroupBox::title { subcontrol-origin: margin; left: 15px; padding: 0 8px; color: #7DD3FC; background-color: #0F172A; border-radius: 4px; }"
+        "QGroupBox::title { subcontrol-origin: margin; left: 15px; padding: 0 8px; color: #7DD3FC; background-color: transparent; border-radius: 4px; }"
         "QCheckBox {"
-        "  color: #E2E8F0; font-size: 13px; padding: 6px; font-weight: bold;"
+        "  color: #E2E8F0; font-size: 13px; padding: 6px; font-weight: bold; background: transparent;"
         "}"
-        "QCheckBox::indicator { width: 16px; height: 16px; border-radius: 4px; border: 2px solid #64748B; }"
+        "QCheckBox:hover { color: #38BDF8; }"
+        "QCheckBox::indicator { width: 16px; height: 16px; border-radius: 4px; border: 2px solid #64748B; background: rgba(15, 23, 42, 0.8); }"
         "QCheckBox::indicator:checked { background-color: #3B82F6; border-color: #3B82F6; image: url(:/icons/check.svg); }"
     );
     setupUI();
@@ -100,8 +101,8 @@ void OptimizationPanel::setupUI() {
 
     // Before panel
     QVBoxLayout* beforeLayout = new QVBoxLayout();
-    QLabel* bLabel = new QLabel("📋 Before Optimization:");
-    bLabel->setStyleSheet("color: #F87171; font-weight: bold; font-size: 15px; margin-bottom: 8px; background-color: #1E293B; padding: 6px; border-radius: 4px; border-left: 4px solid #EF4444;");
+    QLabel* bLabel = new QLabel("📋 Before Optimization");
+    bLabel->setStyleSheet("color: white; font-weight: bold; font-size: 15px; margin-bottom: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #991b1b, stop:1 #7f1d1d); padding: 8px 12px; border-radius: 6px; border-left: 4px solid #ef4444; letter-spacing: 1px;");
     beforeLayout->addWidget(bLabel);
     
     beforeTable = new QTableWidget();
@@ -120,8 +121,8 @@ void OptimizationPanel::setupUI() {
 
     // After panel
     QVBoxLayout* afterLayout = new QVBoxLayout();
-    QLabel* aLabel = new QLabel("✨ After Optimization:");
-    aLabel->setStyleSheet("color: #4ADE80; font-weight: bold; font-size: 15px; margin-bottom: 8px; background-color: #1E293B; padding: 6px; border-radius: 4px; border-left: 4px solid #10B981;");
+    QLabel* aLabel = new QLabel("✨ After Optimization");
+    aLabel->setStyleSheet("color: white; font-weight: bold; font-size: 15px; margin-bottom: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #064e3b, stop:1 #065f46); padding: 8px 12px; border-radius: 6px; border-left: 4px solid #10b981; letter-spacing: 1px;");
     afterLayout->addWidget(aLabel);
     
     afterTable = new QTableWidget();
