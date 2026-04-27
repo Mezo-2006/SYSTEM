@@ -25,7 +25,8 @@ class CodeGenerator {
 private:
     std::vector<AssemblyInstruction> assembly;
     std::map<std::string, std::string> registerAllocation;  // variable/temp -> register
-    int nextRegister;
+    std::vector<std::string> registerPool;
+
     
     std::string allocateRegister(const std::string& var);
     std::string getRegister(const std::string& var);

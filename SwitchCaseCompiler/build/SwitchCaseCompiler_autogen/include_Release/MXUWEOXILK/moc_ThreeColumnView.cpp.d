@@ -159,16 +159,19 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qvalidator.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs_win.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QPushButton \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QSplitter \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTableWidget \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTextEdit \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QWidget \
+  D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractbutton.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractitemdelegate.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractitemview.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractscrollarea.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractslider.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractspinbox.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qframe.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qpushbutton.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qrubberband.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qsizepolicy.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qslider.h \

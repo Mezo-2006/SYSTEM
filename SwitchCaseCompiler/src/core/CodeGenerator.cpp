@@ -26,12 +26,15 @@ std::string AssemblyInstruction::toString() const {
 }
 
 // CodeGenerator implementation
-CodeGenerator::CodeGenerator() : nextRegister(0) {}
+CodeGenerator::CodeGenerator() {
+    reset();
+}
 
 void CodeGenerator::reset() {
     assembly.clear();
     registerAllocation.clear();
-    nextRegister = 0;
+    // Initialize standard x86 general purpose register pool
+    registerPool = {"EAX", "EBX", "ECX", "EDX", "ESI", "EDI"};
 }
 
 std::string CodeGenerator::allocateRegister(const std::string& var) {
@@ -39,7 +42,19 @@ std::string CodeGenerator::allocateRegister(const std::string& var) {
         return registerAllocation[var];
     }
     
-    std::string reg = "R" + std::to_string(nextRegister++);
+    std::string reg;
+    if (!registerPool.empty()) {
+        // Pop from the pool
+        reg = registerPool.back();
+        registerPool.pop_back();
+    } else {
+        // Fallback or "spill" scenario if we run out of registers.
+        // In a real compiler, we would spill to stack. Here we just reuse a generic one 
+        // to avoid crashing, but add a comment to indicate it.
+        reg = "EAX"; 
+        emitAsm("; WARNING", "", "", "Register spill fallback for " + var);
+    }
+    
     registerAllocation[var] = reg;
     return reg;
 }
@@ -58,7 +73,15 @@ std::string CodeGenerator::getRegister(const std::string& var) {
 }
 
 void CodeGenerator::freeRegister(const std::string& var) {
-    registerAllocation.erase(var);
+    auto it = registerAllocation.find(var);
+    if (it != registerAllocation.end()) {
+        std::string reg = it->second;
+        // Don't put "spill" fallback back into the pool to avoid duplicates
+        if (std::find(registerPool.begin(), registerPool.end(), reg) == registerPool.end()) {
+            registerPool.push_back(reg);
+        }
+        registerAllocation.erase(it);
+    }
 }
 
 void CodeGenerator::emitAsm(const std::string& opcode, const std::string& op1, 

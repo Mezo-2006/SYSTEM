@@ -5,6 +5,7 @@
 #include <QTextEdit>
 #include <QTableWidget>
 #include <QSplitter>
+#include <QPushButton>
 #include "../core/TACGenerator.h"
 #include "../core/CodeGenerator.h"
 
@@ -21,6 +22,10 @@ private:
     
     void setupUI();
     void updateDisplay();
+
+private slots:
+    void onExportAsm();
+    void onExportReport();
 
 public:
     explicit ThreeColumnView(QWidget* parent = nullptr);

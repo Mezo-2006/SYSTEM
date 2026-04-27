@@ -792,158 +792,205 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
         return root;
     }
 
+    std::function<void(const Expression*, std::vector<const Expression*>&, std::vector<std::string>&)> flattenExpr;
+    std::function<void(const Expression*, std::vector<const Expression*>&, std::vector<std::string>&)> flattenTerm;
+
+    flattenExpr = [&](const Expression* expr, std::vector<const Expression*>& terms, std::vector<std::string>& ops) {
+        if (auto bin = dynamic_cast<const BinaryExpression*>(expr)) {
+            if (bin->op == "+" || bin->op == "-") {
+                flattenExpr(bin->left.get(), terms, ops);
+                ops.push_back(bin->op);
+                terms.push_back(bin->right.get());
+                return;
+            }
+        }
+        terms.push_back(expr);
+    };
+
+    flattenTerm = [&](const Expression* expr, std::vector<const Expression*>& factors, std::vector<std::string>& ops) {
+        if (auto bin = dynamic_cast<const BinaryExpression*>(expr)) {
+            if (bin->op == "*" || bin->op == "/") {
+                flattenTerm(bin->left.get(), factors, ops);
+                ops.push_back(bin->op);
+                factors.push_back(bin->right.get());
+                return;
+            }
+        }
+        factors.push_back(expr);
+    };
+
     std::function<std::unique_ptr<ParseTreeNode>(const Expression*)> buildExpr;
+    std::function<std::unique_ptr<ParseTreeNode>(const std::vector<const Expression*>&, const std::vector<std::string>&, size_t)> buildExprTail;
     std::function<std::unique_ptr<ParseTreeNode>(const Expression*)> buildTerm;
+    std::function<std::unique_ptr<ParseTreeNode>(const std::vector<const Expression*>&, const std::vector<std::string>&, size_t)> buildTermTail;
     std::function<std::unique_ptr<ParseTreeNode>(const Expression*)> buildFactor;
-    std::function<std::unique_ptr<ParseTreeNode>(const Statement*)> buildStatementCore;
-    std::function<std::unique_ptr<ParseTreeNode>(const Statement*)> buildStmt;
 
     buildFactor = [&](const Expression* expr) {
-        auto factorNode = makeNonTerminal("factor");
+        auto node = makeNonTerminal("factor");
         if (!expr) {
-            factorNode->children.push_back(makeTerminal("ε"));
-            return factorNode;
+            node->children.push_back(makeTerminal("ε"));
+            return node;
         }
-
         if (auto id = dynamic_cast<const Identifier*>(expr)) {
-            factorNode->children.push_back(makeTerminal(id->name));
-            return factorNode;
+            auto identNode = makeNonTerminal("identifier");
+            identNode->children.push_back(makeTerminal(id->name));
+            node->children.push_back(std::move(identNode));
+        } else if (auto cnst = dynamic_cast<const Constant*>(expr)) {
+            auto constNode = makeNonTerminal("int_constant");
+            constNode->children.push_back(makeTerminal(std::to_string(cnst->value)));
+            node->children.push_back(std::move(constNode));
+        } else if (auto str = dynamic_cast<const StringLiteral*>(expr)) {
+            auto strNode = makeNonTerminal("string_literal");
+            strNode->children.push_back(makeTerminal("\"" + str->value + "\""));
+            node->children.push_back(std::move(strNode));
+        } else {
+            node->children.push_back(makeTerminal("("));
+            node->children.push_back(buildExpr(expr));
+            node->children.push_back(makeTerminal(")"));
         }
-        if (auto cnst = dynamic_cast<const Constant*>(expr)) {
-            factorNode->children.push_back(makeTerminal(std::to_string(cnst->value)));
-            return factorNode;
-        }
-        if (auto str = dynamic_cast<const StringLiteral*>(expr)) {
-            factorNode->children.push_back(makeTerminal("\"" + str->value + "\""));
-            return factorNode;
-        }
+        return node;
+    };
 
-        factorNode->children.push_back(makeTerminal("("));
-        factorNode->children.push_back(buildExpr(expr));
-        factorNode->children.push_back(makeTerminal(")"));
-        return factorNode;
+    buildTermTail = [&](const std::vector<const Expression*>& factors, const std::vector<std::string>& ops, size_t index) {
+        auto node = makeNonTerminal("term_tail");
+        if (index >= ops.size()) {
+            node->children.push_back(makeTerminal("ε"));
+            return node;
+        }
+        node->children.push_back(makeTerminal(ops[index]));
+        node->children.push_back(buildFactor(factors[index + 1]));
+        node->children.push_back(buildTermTail(factors, ops, index + 1));
+        return node;
     };
 
     buildTerm = [&](const Expression* expr) {
-        auto termNode = makeNonTerminal("term");
-        if (auto bin = dynamic_cast<const BinaryExpression*>(expr)) {
-            if (bin->op == "*" || bin->op == "/") {
-                termNode->children.push_back(buildTerm(bin->left.get()));
-                termNode->children.push_back(makeTerminal(bin->op));
-                termNode->children.push_back(buildFactor(bin->right.get()));
-                return termNode;
-            }
-        }
+        auto node = makeNonTerminal("term");
+        std::vector<const Expression*> factors;
+        std::vector<std::string> ops;
+        flattenTerm(expr, factors, ops);
+        node->children.push_back(buildFactor(factors[0]));
+        node->children.push_back(buildTermTail(factors, ops, 0));
+        return node;
+    };
 
-        termNode->children.push_back(buildFactor(expr));
-        return termNode;
+    buildExprTail = [&](const std::vector<const Expression*>& terms, const std::vector<std::string>& ops, size_t index) {
+        auto node = makeNonTerminal("expr_tail");
+        if (index >= ops.size()) {
+            node->children.push_back(makeTerminal("ε"));
+            return node;
+        }
+        node->children.push_back(makeTerminal(ops[index]));
+        node->children.push_back(buildTerm(terms[index + 1]));
+        node->children.push_back(buildExprTail(terms, ops, index + 1));
+        return node;
     };
 
     buildExpr = [&](const Expression* expr) {
-        auto exprNode = makeNonTerminal("expr");
-        if (auto bin = dynamic_cast<const BinaryExpression*>(expr)) {
-            if (bin->op == "<<") {
-                exprNode->children.push_back(buildExpr(bin->left.get()));
-                exprNode->children.push_back(makeTerminal("<<"));
-                exprNode->children.push_back(buildExpr(bin->right.get()));
-                return exprNode;
-            }
-            if (bin->op == "+" || bin->op == "-") {
-                exprNode->children.push_back(buildExpr(bin->left.get()));
-                exprNode->children.push_back(makeTerminal(bin->op));
-                exprNode->children.push_back(buildTerm(bin->right.get()));
-                return exprNode;
-            }
-        }
-
-        exprNode->children.push_back(buildTerm(expr));
-        return exprNode;
+        auto node = makeNonTerminal("expr");
+        std::vector<const Expression*> terms;
+        std::vector<std::string> ops;
+        flattenExpr(expr, terms, ops);
+        node->children.push_back(buildTerm(terms[0]));
+        node->children.push_back(buildExprTail(terms, ops, 0));
+        return node;
     };
 
-    buildStatementCore = [&](const Statement* stmt) {
+    std::function<std::unique_ptr<ParseTreeNode>(const Statement*)> buildPreStmt;
+    std::function<std::unique_ptr<ParseTreeNode>(const Statement*)> buildStmtCore;
+
+    auto buildDecl = [&](const DeclarationStatement* decl) {
+        auto declNode = makeNonTerminal("declaration");
+        auto typeNode = makeNonTerminal("type_spec");
+        typeNode->children.push_back(makeTerminal(decl->variableType));
+        declNode->children.push_back(std::move(typeNode));
+
+        auto identNode = makeNonTerminal("identifier");
+        identNode->children.push_back(makeTerminal(decl->variableName));
+        declNode->children.push_back(std::move(identNode));
+
+        auto initNode = makeNonTerminal("decl_init_opt");
+        if (decl->initializer) {
+            initNode->children.push_back(makeTerminal("="));
+            initNode->children.push_back(buildExpr(decl->initializer.get()));
+        } else {
+            initNode->children.push_back(makeTerminal("ε"));
+        }
+        declNode->children.push_back(std::move(initNode));
+        declNode->children.push_back(makeTerminal(";"));
+        return declNode;
+    };
+
+    auto buildAssign = [&](const AssignmentStatement* assign) {
+        auto assignNode = makeNonTerminal("assignment");
+        auto identNode = makeNonTerminal("identifier");
+        identNode->children.push_back(makeTerminal(assign->variableName));
+        assignNode->children.push_back(std::move(identNode));
+        assignNode->children.push_back(makeTerminal("="));
+        assignNode->children.push_back(buildExpr(assign->expression.get()));
+        assignNode->children.push_back(makeTerminal(";"));
+        return assignNode;
+    };
+
+    buildPreStmt = [&](const Statement* stmt) {
+        auto node = makeNonTerminal("pre_stmt");
         if (auto decl = dynamic_cast<const DeclarationStatement*>(stmt)) {
-            auto declarationNode = makeNonTerminal("declaration");
-            declarationNode->children.push_back(makeTerminal(decl->variableType));
-            declarationNode->children.push_back(makeTerminal(decl->variableName));
-            if (decl->initializer) {
-                declarationNode->children.push_back(makeTerminal("="));
-                declarationNode->children.push_back(buildExpr(decl->initializer.get()));
-            }
-            declarationNode->children.push_back(makeTerminal(";"));
-            return declarationNode;
+            node->children.push_back(buildDecl(decl));
+        } else if (auto assign = dynamic_cast<const AssignmentStatement*>(stmt)) {
+            node->children.push_back(buildAssign(assign));
+        } else {
+            // fallback for anything else
+            auto dummy = makeNonTerminal("assignment");
+            dummy->children.push_back(makeTerminal("error"));
+            dummy->children.push_back(makeTerminal(";"));
+            node->children.push_back(std::move(dummy));
         }
-
-        if (auto assign = dynamic_cast<const AssignmentStatement*>(stmt)) {
-            auto assignmentNode = makeNonTerminal("assignment");
-            assignmentNode->children.push_back(makeTerminal(assign->variableName));
-            assignmentNode->children.push_back(makeTerminal("="));
-            assignmentNode->children.push_back(buildExpr(assign->expression.get()));
-            assignmentNode->children.push_back(makeTerminal(";"));
-            return assignmentNode;
-        }
-
-        if (auto cinStmt = dynamic_cast<const CinStatement*>(stmt)) {
-            auto cinNode = makeNonTerminal("cin_stmt");
-            cinNode->children.push_back(makeTerminal("cin"));
-            cinNode->children.push_back(makeTerminal(">>"));
-            cinNode->children.push_back(makeTerminal(cinStmt->variableName));
-            cinNode->children.push_back(makeTerminal(";"));
-            return cinNode;
-        }
-
-        if (auto coutStmt = dynamic_cast<const CoutStatement*>(stmt)) {
-            auto coutNode = makeNonTerminal("cout_stmt");
-            coutNode->children.push_back(makeTerminal("cout"));
-            coutNode->children.push_back(makeTerminal("<<"));
-            coutNode->children.push_back(buildExpr(coutStmt->expression.get()));
-            coutNode->children.push_back(makeTerminal(";"));
-            return coutNode;
-        }
-        
-        auto unknownNode = makeNonTerminal("statement");
-        unknownNode->children.push_back(makeTerminal("ε"));
-        return unknownNode;
+        return node;
     };
 
-    buildStmt = [&](const Statement* stmt) {
-        auto stmtNode = makeNonTerminal("stmt");
-        stmtNode->children.push_back(buildStatementCore(stmt));
-        return stmtNode;
-    };
-
-    std::function<std::unique_ptr<ParseTreeNode>(size_t)> buildPreStmtList;
-    buildPreStmtList = [&](size_t idx) {
-        auto listNode = makeNonTerminal("pre_stmt_list");
+    std::function<std::unique_ptr<ParseTreeNode>(size_t)> buildPreStmtList = [&](size_t idx) {
+        auto node = makeNonTerminal("pre_stmt_list");
         if (idx >= astRoot->preSwitchStatements.size()) {
-            listNode->children.push_back(makeTerminal("ε"));
-            return listNode;
+            node->children.push_back(makeTerminal("ε"));
+            return node;
         }
+        node->children.push_back(buildPreStmt(astRoot->preSwitchStatements[idx].get()));
+        node->children.push_back(buildPreStmtList(idx + 1));
+        return node;
+    };
 
-        auto preStmtNode = makeNonTerminal("pre_stmt");
-        preStmtNode->children.push_back(buildStatementCore(astRoot->preSwitchStatements[idx].get()));
-        listNode->children.push_back(std::move(preStmtNode));
-        listNode->children.push_back(buildPreStmtList(idx + 1));
-        return listNode;
+    auto buildStmt = [&](const Statement* stmt) {
+        auto node = makeNonTerminal("stmt");
+        if (auto decl = dynamic_cast<const DeclarationStatement*>(stmt)) {
+            node->children.push_back(buildDecl(decl));
+        } else if (auto assign = dynamic_cast<const AssignmentStatement*>(stmt)) {
+            node->children.push_back(buildAssign(assign));
+        } else {
+            auto dummy = makeNonTerminal("assignment");
+            dummy->children.push_back(makeTerminal("error"));
+            dummy->children.push_back(makeTerminal(";"));
+            node->children.push_back(std::move(dummy));
+        }
+        return node;
     };
 
     std::function<std::unique_ptr<ParseTreeNode>(const std::vector<std::unique_ptr<Statement>>&, size_t)> buildStmtList;
     buildStmtList = [&](const std::vector<std::unique_ptr<Statement>>& statements, size_t idx) {
-        auto listNode = makeNonTerminal("stmt_list");
+        auto node = makeNonTerminal("stmt_list");
         if (idx >= statements.size()) {
-            listNode->children.push_back(makeTerminal("ε"));
-            return listNode;
+            node->children.push_back(makeTerminal("ε"));
+            return node;
         }
-
-        listNode->children.push_back(buildStmt(statements[idx].get()));
-        listNode->children.push_back(buildStmtList(statements, idx + 1));
-        return listNode;
+        node->children.push_back(buildStmt(statements[idx].get()));
+        node->children.push_back(buildStmtList(statements, idx + 1));
+        return node;
     };
 
-    std::function<std::unique_ptr<ParseTreeNode>(const CaseClause*)> buildCaseClause;
-    buildCaseClause = [&](const CaseClause* clause) {
+    auto buildCaseClause = [&](const CaseClause* clause) {
         auto caseNode = makeNonTerminal("case_clause");
         caseNode->children.push_back(makeTerminal("case"));
-        caseNode->children.push_back(makeTerminal(std::to_string(clause->caseValue)));
+        auto constNode = makeNonTerminal("int_constant");
+        constNode->children.push_back(makeTerminal(std::to_string(clause->caseValue)));
+        caseNode->children.push_back(std::move(constNode));
         caseNode->children.push_back(makeTerminal(":"));
         caseNode->children.push_back(buildStmtList(clause->statements, 0));
         caseNode->children.push_back(makeTerminal("break"));
@@ -958,7 +1005,6 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
             listNode->children.push_back(makeTerminal("ε"));
             return listNode;
         }
-
         listNode->children.push_back(buildCaseClause(cases[idx].get()));
         listNode->children.push_back(buildCaseList(cases, idx + 1));
         return listNode;
@@ -970,14 +1016,11 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
             defaultNode->children.push_back(makeTerminal("ε"));
             return defaultNode;
         }
-
         defaultNode->children.push_back(makeTerminal("default"));
         defaultNode->children.push_back(makeTerminal(":"));
         defaultNode->children.push_back(buildStmtList(defaultCase->statements, 0));
-    if (defaultCase->hasBreak) {
         defaultNode->children.push_back(makeTerminal("break"));
         defaultNode->children.push_back(makeTerminal(";"));
-    }
         return defaultNode;
     };
 
@@ -987,7 +1030,6 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
             switchNode->children.push_back(makeTerminal("ε"));
             return switchNode;
         }
-
         switchNode->children.push_back(makeTerminal("switch"));
         switchNode->children.push_back(makeTerminal("("));
         switchNode->children.push_back(buildExpr(switchStmt->condition.get()));
@@ -999,54 +1041,8 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
         return switchNode;
     };
 
-    auto buildIncludeList = [&]() {
-        auto listNode = makeNonTerminal("include_list");
-        if (includeDirectives.empty()) {
-            listNode->children.push_back(makeTerminal("ε"));
-            return listNode;
-        }
-
-        std::function<std::unique_ptr<ParseTreeNode>(size_t)> buildIncludeListRec;
-        buildIncludeListRec = [&](size_t idx) {
-            auto recNode = makeNonTerminal("include_list");
-            if (idx >= includeDirectives.size()) {
-                recNode->children.push_back(makeTerminal("ε"));
-                return recNode;
-            }
-            const IncludeDirective& include = includeDirectives[idx];
-            auto lineNode = makeNonTerminal("include_line");
-            lineNode->children.push_back(makeTerminal("#"));
-            lineNode->children.push_back(makeTerminal("include"));
-            if (include.angled) {
-                lineNode->children.push_back(makeTerminal("<"));
-            } else {
-                lineNode->children.push_back(makeTerminal("\""));
-            }
-
-            auto headerNode = makeNonTerminal("header_name");
-            headerNode->children.push_back(makeTerminal(include.headerLeft));
-            if (!include.headerRight.empty()) {
-                headerNode->children.push_back(makeTerminal("."));
-                headerNode->children.push_back(makeTerminal(include.headerRight));
-            }
-            lineNode->children.push_back(std::move(headerNode));
-
-            if (include.angled) {
-                lineNode->children.push_back(makeTerminal(">"));
-            } else {
-                lineNode->children.push_back(makeTerminal("\""));
-            }
-
-            recNode->children.push_back(std::move(lineNode));
-            recNode->children.push_back(buildIncludeListRec(idx + 1));
-            return recNode;
-        };
-
-        return buildIncludeListRec(0);
-    };
-
-    auto buildPreambleOpt = [&]() {
-        auto preambleNode = makeNonTerminal("preamble_opt");
+    // STRICT CFG MATCHING FOR R1: program -> preamble_opt pre_stmt_list switch_stmt
+    auto buildUsingOpt = [&]() {
         auto usingNode = makeNonTerminal("using_opt");
         if (hasUsingNamespaceStd) {
             usingNode->children.push_back(makeTerminal("using"));
@@ -1056,35 +1052,19 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
         } else {
             usingNode->children.push_back(makeTerminal("ε"));
         }
-        preambleNode->children.push_back(std::move(usingNode));
+        return usingNode;
+    };
+
+    auto buildPreambleOpt = [&]() {
+        auto preambleNode = makeNonTerminal("preamble_opt");
+        preambleNode->children.push_back(buildUsingOpt());
         return preambleNode;
     };
 
-    if (usesMainWrapper) {
-        auto mainNode = makeNonTerminal("main_func");
-        mainNode->children.push_back(makeTerminal("int"));
-        mainNode->children.push_back(makeTerminal("main"));
-        mainNode->children.push_back(makeTerminal("("));
-        mainNode->children.push_back(makeTerminal(")"));
-        mainNode->children.push_back(makeTerminal("{"));
-        mainNode->children.push_back(buildPreStmtList(0));
-        mainNode->children.push_back(buildSwitchStmt(astRoot->switchStmt.get()));
+    root->children.push_back(buildPreambleOpt());
+    root->children.push_back(buildPreStmtList(0));
+    root->children.push_back(buildSwitchStmt(astRoot->switchStmt.get()));
 
-        auto returnNode = makeNonTerminal("return_stmt");
-        returnNode->children.push_back(makeTerminal("return"));
-        returnNode->children.push_back(makeTerminal(std::to_string(parsedReturnValue)));
-        returnNode->children.push_back(makeTerminal(";"));
-        mainNode->children.push_back(std::move(returnNode));
-        mainNode->children.push_back(makeTerminal("}"));
-
-        root->children.push_back(buildIncludeList());
-        root->children.push_back(buildPreambleOpt());
-        root->children.push_back(std::move(mainNode));
-    } else {
-        root->children.push_back(buildPreambleOpt());
-        root->children.push_back(buildPreStmtList(0));
-        root->children.push_back(buildSwitchStmt(astRoot->switchStmt.get()));
-    }
     return root;
 }
 
