@@ -2,12 +2,16 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h \
   C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/CodeGenerator.h \
   C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/TACGenerator.h \
+  C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/IRFlowDiagram.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/QPropertyAnimation \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/QTimer \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20functional.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20iterator.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20memory.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20type_traits.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20utility.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/q23utility.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/qabstractanimation.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qabstractitemmodel.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qalgorithms.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qanystringview.h \
@@ -18,6 +22,7 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qatomic.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qatomic_cxx11.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbasicatomic.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbasictimer.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbindingstorage.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbytearray.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbytearrayalgorithms.h \
@@ -37,6 +42,7 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qdarwinhelpers.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qdatastream.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qdebug.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/qeasingcurve.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qendian.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qexceptionhandling.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qflags.h \
@@ -75,6 +81,7 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qpair.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qpoint.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qprocessordetection.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/qpropertyanimation.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qrect.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qrefcount.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qregularexpression.h \
@@ -111,6 +118,7 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtdeprecationmarkers.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtenvironmentvariables.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtextstream.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtimer.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtmetamacros.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtnoop.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtpreprocessorsupport.h \
@@ -124,10 +132,12 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qurl.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qutf8stringview.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvariant.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvariantanimation.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvarlengtharray.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qversiontagging.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qxptype_traits.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtCore/qyieldcpu.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtGui/QPainter \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qaction.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qbitmap.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qbrush.h \
@@ -140,6 +150,7 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qimage.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qkeysequence.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpaintdevice.h \
+  D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpainter.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpalette.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpen.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpixelformat.h \
@@ -161,6 +172,7 @@ C:/Users/Mizo/OneDrive\ -\ Arab\ Academy\ for\ Science\ and\ Technology/Desktop/
   D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs_win.h \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QPushButton \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QSplitter \
+  D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTabWidget \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTableWidget \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTextEdit \
   D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QWidget \

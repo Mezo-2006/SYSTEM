@@ -1371,7 +1371,7 @@ void MainWindow::onCompile() {
                 " to " + std::to_string(optimizedAssembly.size()) + " instructions");
     
     // Update three-column view
-    threeColumnView->setData(sourceCode, optimizedTAC, optimizedAssembly);
+    threeColumnView->setData(sourceCode, tacCode, optimizedTAC, optimizedAssembly);
     
     // Update performance metrics
     performanceMetrics->updateMetrics(metrics);

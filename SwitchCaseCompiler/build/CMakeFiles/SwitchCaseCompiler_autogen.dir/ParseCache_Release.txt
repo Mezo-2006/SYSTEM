@@ -210,13 +210,17 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/CodeGenerator.h
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/TACGenerator.h
+ mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/IRFlowDiagram.h
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ThreeColumnView.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/QPropertyAnimation
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/QTimer
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20functional.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20iterator.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20memory.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20type_traits.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/q20utility.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/q23utility.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qabstractanimation.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qabstractitemmodel.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qalgorithms.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qanystringview.h
@@ -227,6 +231,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qatomic.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qatomic_cxx11.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbasicatomic.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbasictimer.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbindingstorage.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbytearray.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qbytearrayalgorithms.h
@@ -246,6 +251,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qdarwinhelpers.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qdatastream.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qdebug.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qeasingcurve.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qendian.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qexceptionhandling.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qflags.h
@@ -284,6 +290,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qpair.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qpoint.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qprocessordetection.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qpropertyanimation.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qrect.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qrefcount.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qregularexpression.h
@@ -320,6 +327,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtdeprecationmarkers.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtenvironmentvariables.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtextstream.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtimer.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtmetamacros.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtnoop.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtpreprocessorsupport.h
@@ -333,10 +341,12 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qurl.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qutf8stringview.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvariant.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvariantanimation.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvarlengtharray.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qversiontagging.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qxptype_traits.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qyieldcpu.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/QPainter
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qaction.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qbitmap.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qbrush.h
@@ -349,6 +359,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qimage.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qkeysequence.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpaintdevice.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpainter.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpalette.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpen.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpixelformat.h
@@ -370,6 +381,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs_win.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QPushButton
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QSplitter
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTabWidget
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTableWidget
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTextEdit
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QWidget

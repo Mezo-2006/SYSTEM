@@ -176,55 +176,122 @@ void OptimizationPanel::displayResults() {
     int aRow = 0;
 
     for (const auto& result : results) {
+        // Check if any changes occurred
+        bool hasChanges = false;
+        if (result.before.size() != result.after.size() || result.removedInstructions > 0 || result.modifiedInstructions > 0) {
+            hasChanges = true;
+        } else {
+            for (size_t i = 0; i < result.before.size(); ++i) {
+                if (result.before[i].toString() != result.after[i].toString()) {
+                    hasChanges = true;
+                    break;
+                }
+            }
+        }
+
         // Headers for before
         beforeTable->insertRow(bRow);
-        QTableWidgetItem* bHeader = new QTableWidgetItem("=== " + QString::fromStdString(result.optimizationName) + " ===");
+        QTableWidgetItem* bHeader = new QTableWidgetItem("▼ " + QString::fromStdString(result.optimizationName));
+        bHeader->setBackground(QColor("#2d2d30"));
         bHeader->setForeground(QColor("#dcdcaa"));
         QFont f = bHeader->font(); f.setBold(true); bHeader->setFont(f);
         beforeTable->setItem(bRow++, 0, bHeader);
         
         // Headers for after
         afterTable->insertRow(aRow);
-        QTableWidgetItem* aHeader = new QTableWidgetItem("=== " + QString::fromStdString(result.optimizationName) + " ===");
+        QTableWidgetItem* aHeader = new QTableWidgetItem("▼ " + QString::fromStdString(result.optimizationName));
+        aHeader->setBackground(QColor("#2d2d30"));
         aHeader->setForeground(QColor("#4ec9b0"));
         aHeader->setFont(f);
         afterTable->setItem(aRow++, 0, aHeader);
 
-        for (const auto& inst : result.before) {
+        if (!hasChanges) {
             beforeTable->insertRow(bRow);
-            QTableWidgetItem* item = new QTableWidgetItem(QString::fromStdString(inst.toString()));
-            item->setForeground(QColor("#d4d4d4"));
+            QTableWidgetItem* bOpt = new QTableWidgetItem("✨ Already Optimal (No changes needed)");
+            bOpt->setForeground(QColor("#64748B"));
+            QFont iFont = bOpt->font(); iFont.setItalic(true); bOpt->setFont(iFont);
+            beforeTable->setItem(bRow++, 0, bOpt);
+            
+            afterTable->insertRow(aRow);
+            QTableWidgetItem* aOpt = new QTableWidgetItem("✨ Already Optimal (No changes needed)");
+            aOpt->setForeground(QColor("#64748B"));
+            aOpt->setFont(iFont);
+            afterTable->setItem(aRow++, 0, aOpt);
+            
+            // Spacer
+            beforeTable->insertRow(bRow); beforeTable->setItem(bRow++, 0, new QTableWidgetItem(""));
+            afterTable->insertRow(aRow); afterTable->setItem(aRow++, 0, new QTableWidgetItem(""));
+            continue;
+        }
+
+        // Find which lines were removed
+        // Basic diff heuristic for display: check string matching
+        std::vector<bool> bRemoved(result.before.size(), true);
+        std::vector<bool> aNew(result.after.size(), true);
+        
+        for (size_t i = 0; i < result.before.size(); ++i) {
+            for (size_t j = 0; j < result.after.size(); ++j) {
+                if (result.before[i].toString() == result.after[j].toString() && aNew[j]) {
+                    bRemoved[i] = false;
+                    aNew[j] = false;
+                    break;
+                }
+            }
+        }
+
+        for (size_t i = 0; i < result.before.size(); ++i) {
+            beforeTable->insertRow(bRow);
+            QTableWidgetItem* item = new QTableWidgetItem(QString::fromStdString(result.before[i].toString()));
+            if (bRemoved[i]) {
+                item->setForeground(QColor("#f48771")); // Redish for removed
+                item->setBackground(QColor("#4a1f1f")); // Dark red background
+                QFont strike = item->font();
+                strike.setStrikeOut(true);
+                item->setFont(strike);
+            } else {
+                item->setForeground(QColor("#d4d4d4"));
+            }
             beforeTable->setItem(bRow++, 0, item);
         }
         
         // Add removed instructions spacer
         beforeTable->insertRow(bRow);
-        QTableWidgetItem* bSpacer = new QTableWidgetItem(QString("↳ Removed: %1 instructions").arg(result.removedInstructions));
-        bSpacer->setForeground(QColor("#f48771"));
-        QFont iFont = bSpacer->font(); iFont.setItalic(true); bSpacer->setFont(iFont);
+        QTableWidgetItem* bSpacer = new QTableWidgetItem(QString("✨ Saved: %1 instructions!").arg(result.removedInstructions));
+        bSpacer->setForeground(QColor("#FBBF24")); // Gold color
+        bSpacer->setBackground(QColor("#1e1e1e"));
+        QFont iFont = bSpacer->font(); iFont.setItalic(true); iFont.setBold(true); bSpacer->setFont(iFont);
         beforeTable->setItem(bRow++, 0, bSpacer);
         
         beforeTable->insertRow(bRow);
         beforeTable->setItem(bRow++, 0, new QTableWidgetItem(""));
 
-        for (const auto& inst : result.after) {
+        for (size_t j = 0; j < result.after.size(); ++j) {
             afterTable->insertRow(aRow);
-            QTableWidgetItem* item = new QTableWidgetItem(QString::fromStdString(inst.toString()));
-            item->setForeground(QColor("#d4d4d4"));
+            QTableWidgetItem* item = new QTableWidgetItem(QString::fromStdString(result.after[j].toString()));
+            if (aNew[j]) {
+                item->setForeground(QColor("#34D399")); // Greenish for new/modified
+                item->setBackground(QColor("#102a1c")); // Dark green background
+                QFont bold = item->font();
+                bold.setBold(true);
+                item->setFont(bold);
+            } else {
+                item->setForeground(QColor("#d4d4d4"));
+            }
             afterTable->setItem(aRow++, 0, item);
         }
-        
-        // Add vertical spacing
-        // ...
         
         // Match lengths to keep diff aligned
         while (aRow < bRow) {
             afterTable->insertRow(aRow);
-            afterTable->setItem(aRow++, 0, new QTableWidgetItem(""));
+            QTableWidgetItem* emptyItem = new QTableWidgetItem("");
+            emptyItem->setBackground(QColor("#1e1e1e"));
+            afterTable->setItem(aRow++, 0, emptyItem);
         }
         while (bRow < aRow) {
             beforeTable->insertRow(bRow);
-            beforeTable->setItem(bRow++, 0, new QTableWidgetItem(""));
+            QTableWidgetItem* emptyItem = new QTableWidgetItem("");
+            emptyItem->setBackground(QColor("#1e1e1e"));
+            beforeTable->setItem(bRow++, 0, emptyItem);
         }
     }
 }

@@ -124,11 +124,31 @@ void ThreeColumnView::setupUI() {
     exportReportBtn->setCursor(Qt::PointingHandCursor);
     connect(exportReportBtn, &QPushButton::clicked, this, &ThreeColumnView::onExportReport);
     
+    animPlayBtn = new QPushButton("▶ Play Animation", grpTac);
+    animPlayBtn->setStyleSheet("background-color: #8B5CF6; color: white; border-radius: 4px; padding: 4px 8px; font-weight: bold;");
+    animPlayBtn->setCursor(Qt::PointingHandCursor);
+    
     auto* tacHeaderLayout = new QHBoxLayout();
+    tacHeaderLayout->addWidget(animPlayBtn);
     tacHeaderLayout->addStretch();
     tacHeaderLayout->addWidget(exportReportBtn);
     tacLayout->addLayout(tacHeaderLayout);
-    tacLayout->addWidget(tacTable);
+    
+    tacTabWidget = new QTabWidget(this);
+    tacTabWidget->setStyleSheet(R"(
+        QTabWidget::pane { border: 1px solid #334155; border-radius: 4px; }
+        QTabBar::tab { background: #1E293B; color: #94A3B8; padding: 8px 12px; margin-right: 2px; border-top-left-radius: 4px; border-top-right-radius: 4px; }
+        QTabBar::tab:selected { background: #334155; color: #E2E8F0; font-weight: bold; border-bottom: 2px solid #3B82F6; }
+        QTabBar::tab:hover:!selected { background: #26354B; }
+    )");
+    
+    irFlowDiagram = new IRFlowDiagram(this);
+    connect(animPlayBtn, &QPushButton::clicked, irFlowDiagram, &IRFlowDiagram::startExecution);
+    
+    tacTabWidget->addTab(tacTable, "📋 Table View");
+    tacTabWidget->addTab(irFlowDiagram, "🔀 Interactive Flow");
+    
+    tacLayout->addWidget(tacTabWidget);
 
     auto* grpAsm = new QGroupBox("⚙️ x86 Assembly", this);
     grpAsm->setStyleSheet(groupStyle);
@@ -167,9 +187,10 @@ void ThreeColumnView::setupUI() {
 }
 
 void ThreeColumnView::setData(const std::string& source,
-                              const std::vector<TACInstruction>& tac,
+                              const std::vector<TACInstruction>& originalTac,
+                              const std::vector<TACInstruction>& optimizedTac,
                               const std::vector<AssemblyInstruction>& assembly) {
-    tacInstructions = tac;
+    tacInstructions = optimizedTac;
     assemblyInstructions = assembly;
 
     // Display source
@@ -186,9 +207,9 @@ void ThreeColumnView::setData(const std::string& source,
 
     // Display TAC in Table
     tacTable->setRowCount(0);
-    tacTable->setRowCount(tac.size());
-    for (size_t i = 0; i < tac.size(); i++) {
-        const auto& inst = tac[i];
+    tacTable->setRowCount(optimizedTac.size());
+    for (size_t i = 0; i < optimizedTac.size(); i++) {
+        const auto& inst = optimizedTac[i];
         
         QTableWidgetItem* numItem = new QTableWidgetItem(QString::number(i + 1));
         numItem->setTextAlignment(Qt::AlignCenter);
@@ -227,6 +248,10 @@ void ThreeColumnView::setData(const std::string& source,
         tacTable->setItem(i, 3, arg1Item);
         tacTable->setItem(i, 4, arg2Item);
     }
+    
+    // Pass to IR Flow Diagram (Show before/after optimization diff visually)
+    irFlowDiagram->setOptimizedTAC(originalTac, optimizedTac);
+    irFlowDiagram->setShowOptimized(true);
 
     // Display Assembly
     QString asmHtml;
