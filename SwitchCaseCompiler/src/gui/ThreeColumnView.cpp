@@ -20,6 +20,7 @@ void ThreeColumnView::setupUI() {
     layout->setSpacing(15);
 
     sourceColumn = new QTextEdit(this);
+    originalTacTable = new QTableWidget(this);
     tacTable = new QTableWidget(this);
     assemblyColumn = new QTextEdit(this);
 
@@ -46,25 +47,29 @@ void ThreeColumnView::setupUI() {
     assemblyColumn->setReadOnly(true);
     assemblyColumn->setStyleSheet(textStyle);
 
-    // TAC Table Setup
-    tacTable->setColumnCount(5);
-    tacTable->setHorizontalHeaderLabels({"#", "Opcode", "Result", "Arg 1", "Arg 2"});
-    tacTable->verticalHeader()->setVisible(false);
-    tacTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    tacTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tacTable->setSelectionMode(QAbstractItemView::SingleSelection);
-    tacTable->setShowGrid(false);
-    tacTable->setAlternatingRowColors(true);
-    
-    tacTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-    tacTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-    tacTable->setColumnWidth(0, 40);
-    tacTable->setColumnWidth(1, 90);
-    tacTable->setColumnWidth(2, 80);
-    tacTable->setColumnWidth(3, 80);
-    tacTable->horizontalHeader()->setStretchLastSection(true);
+    // TAC Tables Setup
+    auto setupTable = [](QTableWidget* table) {
+        table->setColumnCount(5);
+        table->setHorizontalHeaderLabels({"#", "Opcode", "Result", "Arg 1", "Arg 2"});
+        table->verticalHeader()->setVisible(false);
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        table->setSelectionBehavior(QAbstractItemView::SelectRows);
+        table->setSelectionMode(QAbstractItemView::SingleSelection);
+        table->setShowGrid(false);
+        table->setAlternatingRowColors(true);
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+        table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+        table->setColumnWidth(0, 40);
+        table->setColumnWidth(1, 90);
+        table->setColumnWidth(2, 80);
+        table->setColumnWidth(3, 80);
+        table->horizontalHeader()->setStretchLastSection(true);
+    };
 
-    tacTable->setStyleSheet(R"(
+    setupTable(originalTacTable);
+    setupTable(tacTable);
+
+    QString tableStyle = R"(
         QTableWidget {
             background-color: #1E293B;
             alternate-background-color: #0F172A;
@@ -89,7 +94,9 @@ void ThreeColumnView::setupUI() {
             padding: 4px;
             border-bottom: 1px solid #1E293B;
         }
-    )");
+    )";
+    originalTacTable->setStyleSheet(tableStyle);
+    tacTable->setStyleSheet(tableStyle);
 
     // Create styled group boxes
     QString groupStyle = R"(
@@ -145,7 +152,29 @@ void ThreeColumnView::setupUI() {
     irFlowDiagram = new IRFlowDiagram(this);
     connect(animPlayBtn, &QPushButton::clicked, irFlowDiagram, &IRFlowDiagram::startExecution);
     
-    tacTabWidget->addTab(tacTable, "📋 Table View");
+    QSplitter* tacSplitter = new QSplitter(Qt::Horizontal, this);
+    tacSplitter->setStyleSheet("QSplitter::handle { background-color: #334155; width: 2px; }");
+    
+    QWidget* originalContainer = new QWidget(this);
+    QVBoxLayout* origLayout = new QVBoxLayout(originalContainer);
+    origLayout->setContentsMargins(0, 0, 0, 0);
+    QLabel* origLabel = new QLabel("📋 Before Optimization", this);
+    origLabel->setStyleSheet("color: #F87171; font-weight: bold; margin-bottom: 4px;");
+    origLayout->addWidget(origLabel);
+    origLayout->addWidget(originalTacTable);
+    
+    QWidget* optimizedContainer = new QWidget(this);
+    QVBoxLayout* optLayout = new QVBoxLayout(optimizedContainer);
+    optLayout->setContentsMargins(0, 0, 0, 0);
+    QLabel* optLabel = new QLabel("✨ After Optimization", this);
+    optLabel->setStyleSheet("color: #4ADE80; font-weight: bold; margin-bottom: 4px;");
+    optLayout->addWidget(optLabel);
+    optLayout->addWidget(tacTable);
+    
+    tacSplitter->addWidget(originalContainer);
+    tacSplitter->addWidget(optimizedContainer);
+    
+    tacTabWidget->addTab(tacSplitter, "📋 Table View");
     tacTabWidget->addTab(irFlowDiagram, "🔀 Interactive Flow");
     
     tacLayout->addWidget(tacTabWidget);
@@ -205,49 +234,57 @@ void ThreeColumnView::setData(const std::string& source,
     }
     sourceColumn->setHtml(sourceHtml);
 
-    // Display TAC in Table
-    tacTable->setRowCount(0);
-    tacTable->setRowCount(optimizedTac.size());
-    for (size_t i = 0; i < optimizedTac.size(); i++) {
-        const auto& inst = optimizedTac[i];
-        
-        QTableWidgetItem* numItem = new QTableWidgetItem(QString::number(i + 1));
-        numItem->setTextAlignment(Qt::AlignCenter);
-        numItem->setForeground(QColor("#64748B"));
-        
-        QString opStr = QString::fromStdString(inst.opcodeToString());
-        QTableWidgetItem* opItem = new QTableWidgetItem(opStr);
-        if (inst.opcode == TACOpcode::LABEL) {
-            opItem->setForeground(QColor("#FBBF24")); // Label gold
-        } else if (inst.opcode == TACOpcode::GOTO || inst.opcode == TACOpcode::IF_GOTO || inst.opcode == TACOpcode::IF_FALSE_GOTO) {
-            opItem->setForeground(QColor("#F472B6")); // Flow control pink
-        } else {
-            opItem->setForeground(QColor("#C084FC")); // Opcode purple
-        }
-        
-        QTableWidgetItem* resItem = new QTableWidgetItem(QString::fromStdString(inst.result));
-        resItem->setForeground(QColor("#60A5FA")); // Result blue
-        
-        QTableWidgetItem* arg1Item = new QTableWidgetItem(QString::fromStdString(inst.arg1));
-        arg1Item->setForeground(QColor("#34D399")); // Arg green
-        
-        QTableWidgetItem* arg2Item = new QTableWidgetItem(QString::fromStdString(inst.arg2));
-        arg2Item->setForeground(QColor("#34D399")); // Arg green
-        
-        // If it's a LABEL, set it properly
-        if (inst.opcode == TACOpcode::LABEL) {
-            resItem->setText(QString::fromStdString(inst.result));
-            resItem->setForeground(QColor("#FBBF24"));
+    // Display TAC in Tables
+    auto populateTacTable = [](QTableWidget* table, const std::vector<TACInstruction>& tacList, bool isOptimized) {
+        table->setRowCount(0);
+        table->setRowCount(tacList.size());
+        for (size_t i = 0; i < tacList.size(); i++) {
+            const auto& inst = tacList[i];
             
-            opItem->setText("LABEL");
-        }
+            QTableWidgetItem* numItem = new QTableWidgetItem(QString::number(i + 1));
+            numItem->setTextAlignment(Qt::AlignCenter);
+            numItem->setForeground(QColor("#64748B"));
+            if (isOptimized) {
+                numItem->setBackground(QColor("#064E3B")); // Dark green hint for optimized
+            } else {
+                numItem->setBackground(QColor("#451A03")); // Dark orange/red hint for original
+            }
+            
+            QString opStr = QString::fromStdString(inst.opcodeToString());
+            QTableWidgetItem* opItem = new QTableWidgetItem(opStr);
+            if (inst.opcode == TACOpcode::LABEL) {
+                opItem->setForeground(QColor("#FBBF24")); // Label gold
+            } else if (inst.opcode == TACOpcode::GOTO || inst.opcode == TACOpcode::IF_GOTO || inst.opcode == TACOpcode::IF_FALSE_GOTO) {
+                opItem->setForeground(QColor("#F472B6")); // Flow control pink
+            } else {
+                opItem->setForeground(QColor("#C084FC")); // Opcode purple
+            }
+            
+            QTableWidgetItem* resItem = new QTableWidgetItem(QString::fromStdString(inst.result));
+            resItem->setForeground(QColor("#60A5FA")); // Result blue
+            
+            QTableWidgetItem* arg1Item = new QTableWidgetItem(QString::fromStdString(inst.arg1));
+            arg1Item->setForeground(QColor("#34D399")); // Arg green
+            
+            QTableWidgetItem* arg2Item = new QTableWidgetItem(QString::fromStdString(inst.arg2));
+            arg2Item->setForeground(QColor("#34D399")); // Arg green
+            
+            if (inst.opcode == TACOpcode::LABEL) {
+                resItem->setText(QString::fromStdString(inst.result));
+                resItem->setForeground(QColor("#FBBF24"));
+                opItem->setText("LABEL");
+            }
 
-        tacTable->setItem(i, 0, numItem);
-        tacTable->setItem(i, 1, opItem);
-        tacTable->setItem(i, 2, resItem);
-        tacTable->setItem(i, 3, arg1Item);
-        tacTable->setItem(i, 4, arg2Item);
-    }
+            table->setItem(i, 0, numItem);
+            table->setItem(i, 1, opItem);
+            table->setItem(i, 2, resItem);
+            table->setItem(i, 3, arg1Item);
+            table->setItem(i, 4, arg2Item);
+        }
+    };
+
+    populateTacTable(originalTacTable, originalTac, false);
+    populateTacTable(tacTable, optimizedTac, true);
     
     // Pass to IR Flow Diagram (Show before/after optimization diff visually)
     irFlowDiagram->setOptimizedTAC(originalTac, optimizedTac);

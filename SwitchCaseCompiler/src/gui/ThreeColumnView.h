@@ -16,6 +16,7 @@ class ThreeColumnView : public QWidget {
 
 private:
     QTextEdit* sourceColumn;
+    QTableWidget* originalTacTable;
     QTableWidget* tacTable;
     QTextEdit* assemblyColumn;
     QTabWidget* tacTabWidget;
