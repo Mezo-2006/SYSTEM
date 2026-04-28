@@ -227,58 +227,102 @@ void TACGenerator::visit(SwitchStatement* node) {
     if (node->condition) {
         node->condition->accept(this);
     } else {
-        lastResult = "0";  // fallback — no condition
+        lastResult = "0";
     }
     std::string switchVar = lastResult.empty() ? "0" : lastResult;
     
     std::string endLabel = newLabel();
-    std::vector<std::string> caseLabels;
-    std::string defaultLabel;
     
-    // Generate labels for each case
-    for (size_t i = 0; i < node->cases.size(); i++) {
+    // ── Collect cases from BOTH AST paths ─────────────────────────────────
+    // New AST: cases are CaseStmt nodes inside node->body->statements
+    // Legacy AST: cases are CaseClause nodes in node->cases
+    
+    struct CaseInfo {
+        int value;
+        bool isDefault;
+        std::vector<Statement*> stmts;  // non-owning pointers
+    };
+    std::vector<CaseInfo> caseInfos;
+    CaseInfo defaultInfo = { -1, true, {} };
+    bool hasDefault = false;
+    
+    if (node->body && !node->body->statements.empty()) {
+        // NEW AST path: extract CaseStmt from body
+        for (auto& stmt : node->body->statements) {
+            CaseStmt* cs = dynamic_cast<CaseStmt*>(stmt.get());
+            if (!cs) continue;
+            
+            CaseInfo ci;
+            ci.value = cs->caseValue;
+            ci.isDefault = cs->isDefault;
+            for (auto& s : cs->statements) ci.stmts.push_back(s.get());
+            
+            if (cs->isDefault) {
+                defaultInfo = ci;
+                hasDefault = true;
+            } else {
+                caseInfos.push_back(ci);
+            }
+        }
+    } else {
+        // LEGACY AST path: use node->cases / node->defaultCase
+        for (auto& cc : node->cases) {
+            CaseInfo ci;
+            ci.value = cc->caseValue;
+            ci.isDefault = cc->isDefault;
+            for (auto& s : cc->statements) ci.stmts.push_back(s.get());
+            caseInfos.push_back(ci);
+        }
+        if (node->defaultCase) {
+            defaultInfo.value = node->defaultCase->caseValue;
+            for (auto& s : node->defaultCase->statements) defaultInfo.stmts.push_back(s.get());
+            hasDefault = true;
+        }
+    }
+    
+    // ── Generate labels ───────────────────────────────────────────────────
+    std::vector<std::string> caseLabels;
+    for (size_t i = 0; i < caseInfos.size(); i++) {
         caseLabels.push_back(newLabel());
     }
+    std::string defaultLabel;
+    if (hasDefault) defaultLabel = newLabel();
     
-    if (node->defaultCase) {
-        defaultLabel = newLabel();
-    }
-    
-    // Generate comparison and jumps for each case
-    for (size_t i = 0; i < node->cases.size(); i++) {
-        std::string caseValue = std::to_string(node->cases[i]->caseValue);
+    // ── Comparison jumps ──────────────────────────────────────────────────
+    for (size_t i = 0; i < caseInfos.size(); i++) {
+        std::string caseValue = std::to_string(caseInfos[i].value);
         std::string tempCond = newTemp();
-        
-        // t1 = switchVar == caseValue
         emitInstruction(TACOpcode::EQ, tempCond, switchVar, caseValue);
-        
-        // if t1 goto L_case_i
         emitIfGoto(tempCond, caseLabels[i]);
     }
     
-    // If no case matches, goto default (or end if no default)
-    if (node->defaultCase) {
+    // No match → goto default or end
+    if (hasDefault) {
         emitGoto(defaultLabel);
     } else {
         emitGoto(endLabel);
     }
     
-    // Generate code for each case
-    for (size_t i = 0; i < node->cases.size(); i++) {
+    // ── Case bodies ───────────────────────────────────────────────────────
+    for (size_t i = 0; i < caseInfos.size(); i++) {
         emitLabel(caseLabels[i]);
-        node->cases[i]->accept(this);
-        // Case statements include break, which generates goto end
+        for (auto* stmt : caseInfos[i].stmts) {
+            if (!dynamic_cast<BreakStmt*>(stmt))  // skip break — we emit goto instead
+                stmt->accept(this);
+        }
         emitGoto(endLabel);
     }
     
-    // Generate code for default case
-    if (node->defaultCase) {
+    // ── Default body ──────────────────────────────────────────────────────
+    if (hasDefault) {
         emitLabel(defaultLabel);
-        node->defaultCase->accept(this);
+        for (auto* stmt : defaultInfo.stmts) {
+            if (!dynamic_cast<BreakStmt*>(stmt))
+                stmt->accept(this);
+        }
         emitGoto(endLabel);
     }
     
-    // End label
     emitLabel(endLabel);
 }
 

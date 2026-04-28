@@ -135,15 +135,10 @@ int main(int argc, char* argv[]) {
     CodeGenerator codeGenerator;
     const auto assembly = codeGenerator.generate(optimizedTac);
 
-    TargetCodeOptimizer targetOptimizer;
-    targetOptimizer.setAssembly(assembly);
-    const auto optimizedAssembly = targetOptimizer.optimize();
-
     std::cout << "[phase] codegen\\n";
     std::cout << "[tac] " << tac.size() << "\\n";
     std::cout << "[tac_optimized] " << optimizedTac.size() << "\\n";
     std::cout << "[asm] " << assembly.size() << "\\n";
-    std::cout << "[asm_optimized] " << optimizedAssembly.size() << "\\n";
     std::cout << "[status] success\\n";
 
     return 0;

@@ -45,7 +45,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     tacGenerator = std::make_unique<TACGenerator>();
     optimizer = std::make_unique<Optimizer>();
     codeGenerator = std::make_unique<CodeGenerator>();
-    targetOptimizer = std::make_unique<TargetCodeOptimizer>();
     
     // Initialize real-time parsing timer
     parseTimer = new QTimer(this);
@@ -369,7 +368,7 @@ void MainWindow::setupEditorTab() {
     validityLabel->hide();
 
     phaseProgressBar = new QProgressBar();
-    phaseProgressBar->setRange(0, 7);
+    phaseProgressBar->setRange(0, 6);
     phaseProgressBar->setValue(0);
     phaseProgressBar->setTextVisible(true);
     phaseProgressBar->setFormat("Phase %v / %m");
@@ -401,8 +400,8 @@ void MainWindow::setupEditorTab() {
     phaseTimelineLayout->setContentsMargins(8, 8, 8, 8);
     phaseTimelineLayout->setSpacing(6);
 
-    const QStringList phaseShortNames = {"Lex", "Parse", "Semantic", "TAC", "Optimize", "Codegen", "TargetOpt"};
-    for (int i = 0; i < 7; ++i) {
+    const QStringList phaseShortNames = {"Lex", "Parse", "Semantic", "TAC", "Optimize", "Codegen"};
+    for (int i = 0; i < 6; ++i) {
         QWidget* phaseCard = new QWidget();
         QVBoxLayout* phaseCardLayout = new QVBoxLayout(phaseCard);
         phaseCardLayout->setContentsMargins(4, 2, 4, 2);
@@ -1033,7 +1032,7 @@ void MainWindow::onCompile() {
     };
 
     auto setPhaseState = [this](int phaseIndex, const QString& state, qint64 elapsedMs) {
-        if (phaseIndex < 0 || phaseIndex >= 7 || !phaseBadges[phaseIndex] || !phaseDurations[phaseIndex]) {
+        if (phaseIndex < 0 || phaseIndex >= 6 || !phaseBadges[phaseIndex] || !phaseDurations[phaseIndex]) {
             return;
         }
 
@@ -1097,7 +1096,7 @@ void MainWindow::onCompile() {
     };
 
     phaseProgressBar->setValue(0);
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < 6; ++i) {
         setPhaseState(i, "pending", -1);
     }
 
@@ -1352,26 +1351,8 @@ void MainWindow::onCompile() {
     }
     logToConsole("  Generated " + std::to_string(assembly.size()) + " assembly instructions");
     
-    // PHASE 7: Target Optimization
-    setPhaseState(6, "active", -1);
-    phaseTimer.restart();
-    logToConsole("\n[PHASE 7] Target Code Optimization...");
-    targetOptimizer->setAssembly(assembly);
-    auto optimizedAssembly = targetOptimizer->optimize();
-    metrics.targetOptTime = std::chrono::milliseconds(phaseTimer.elapsed());
-    metrics.optimizedAssemblyInstructions = static_cast<int>(optimizedAssembly.size());
-    metrics.compressionRatio = assembly.size() > 0 ? 
-        ((static_cast<double>(assembly.size() - optimizedAssembly.size()) / assembly.size()) * 100.0) : 0.0;
-    animatePhaseProgress(7);
-    setPhaseState(6, "done", phaseTimer.elapsed());
-    if (pipelineDiagram) {
-        pipelineDiagram->setPhaseStatus(6, "done", phaseTimer.elapsed(), metrics.optimizedAssemblyInstructions);
-    }
-    logToConsole("  Optimized from " + std::to_string(assembly.size()) + 
-                " to " + std::to_string(optimizedAssembly.size()) + " instructions");
-    
-    // Update three-column view
-    threeColumnView->setData(sourceCode, tacCode, optimizedTAC, optimizedAssembly);
+    // Update three-column view (raw assembly, no assembly-level optimization)
+    threeColumnView->setData(sourceCode, tacCode, optimizedTAC, assembly);
     
     // Update performance metrics
     performanceMetrics->updateMetrics(metrics);
@@ -1383,7 +1364,7 @@ void MainWindow::onCompile() {
     reportStats.astNodes = metrics.astNodes;
     reportStats.tacBefore = metrics.tacInstructions;
     reportStats.tacAfter = metrics.optimizedTacInstructions;
-    reportStats.assemblyLines = metrics.optimizedAssemblyInstructions;
+    reportStats.assemblyLines = metrics.assemblyInstructions;
     reportStats.symbolCount = metrics.symbolTableEntries;
     reportStats.sourceLines = sourceEditor->document()->blockCount();
     reportStats.success = true;
@@ -1401,8 +1382,7 @@ void MainWindow::onCompile() {
         metrics.semanticTime.count(),
         metrics.tacTime.count(),
         metrics.optimizationTime.count(),
-        metrics.codegenTime.count(),
-        metrics.targetOptTime.count()
+        metrics.codegenTime.count()
     };
     reportStats.phaseNames = {
         "Lexical",
@@ -1410,8 +1390,7 @@ void MainWindow::onCompile() {
         "Semantic",
         "TAC",
         "Optimize",
-        "CodeGen",
-        "TargetOpt"
+        "CodeGen"
     };
     reportStats.totalMs = 0;
     for (const auto phaseMs : reportStats.phaseMs) {

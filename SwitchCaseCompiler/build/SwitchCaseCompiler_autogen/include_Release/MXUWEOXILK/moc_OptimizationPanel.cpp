@@ -7,6 +7,7 @@
 *****************************************************************************/
 
 #include "../../../../src/gui/OptimizationPanel.h"
+#include <QtGui/qtextcursor.h>
 #include <QtCore/qmetatype.h>
 
 #include <QtCore/qtmochelpers.h>
@@ -37,7 +38,11 @@ struct qt_meta_tag_ZN17OptimizationPanelE_t {};
 
 #ifdef QT_MOC_HAS_STRINGDATA
 static constexpr auto qt_meta_stringdata_ZN17OptimizationPanelE = QtMocHelpers::stringData(
-    "OptimizationPanel"
+    "OptimizationPanel",
+    "onViewModeChanged",
+    "",
+    "onPassSelected",
+    "index"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -49,12 +54,20 @@ Q_CONSTINIT static const uint qt_meta_data_ZN17OptimizationPanelE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-       0,    0, // methods
+       2,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
        0,       // signalCount
+
+ // slots: name, argc, parameters, tag, flags, initial metatype offsets
+       1,    0,   26,    2, 0x08,    1 /* Private */,
+       3,    1,   27,    2, 0x08,    2 /* Private */,
+
+ // slots: parameters
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,    4,
 
        0        // eod
 };
@@ -67,7 +80,12 @@ Q_CONSTINIT const QMetaObject OptimizationPanel::staticMetaObject = { {
     nullptr,
     qt_incomplete_metaTypeArray<qt_meta_tag_ZN17OptimizationPanelE_t,
         // Q_OBJECT / Q_GADGET
-        QtPrivate::TypeAndForceComplete<OptimizationPanel, std::true_type>
+        QtPrivate::TypeAndForceComplete<OptimizationPanel, std::true_type>,
+        // method 'onViewModeChanged'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'onPassSelected'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>
     >,
     nullptr
 } };
@@ -75,10 +93,13 @@ Q_CONSTINIT const QMetaObject OptimizationPanel::staticMetaObject = { {
 void OptimizationPanel::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     auto *_t = static_cast<OptimizationPanel *>(_o);
-    (void)_t;
-    (void)_c;
-    (void)_id;
-    (void)_a;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        switch (_id) {
+        case 0: _t->onViewModeChanged(); break;
+        case 1: _t->onPassSelected((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        default: ;
+        }
+    }
 }
 
 const QMetaObject *OptimizationPanel::metaObject() const
@@ -97,6 +118,18 @@ void *OptimizationPanel::qt_metacast(const char *_clname)
 int OptimizationPanel::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 {
     _id = QWidget::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 2)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 2;
+    }
+    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 2)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 2;
+    }
     return _id;
 }
 QT_WARNING_POP

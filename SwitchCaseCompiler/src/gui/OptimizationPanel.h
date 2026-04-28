@@ -5,12 +5,17 @@
 #include <QCheckBox>
 #include <QTableWidget>
 #include <QPushButton>
+#include <QLabel>
+#include <QRadioButton>
+#include <QComboBox>
+#include <QScrollArea>
 #include "../core/Optimizer.h"
 
 class OptimizationPanel : public QWidget {
     Q_OBJECT
 
 private:
+    // Optimization toggle checkboxes
     QCheckBox* constantFoldingCheckbox;
     QCheckBox* deadCodeCheckbox;
     QCheckBox* cseCheckbox;
@@ -18,12 +23,36 @@ private:
     QCheckBox* copyPropCheckbox;
     QCheckBox* strengthReductionCheckbox;
 
+    // View mode: all passes vs single pass
+    QRadioButton* showAllRadio;
+    QRadioButton* showPassRadio;
+    QComboBox* passSelector;
+
+    // Before/After tables
     QTableWidget* beforeTable;
     QTableWidget* afterTable;
-    
+
+    // Statistics
+    QTableWidget* statsTable;
+    QLabel* summaryLabel;
+
+    // Impact visualization
+    QWidget* impactBar;
+
     std::vector<OptimizationResult> results;
     
     void setupUI();
+    void populateBeforeAfter(const std::vector<TACInstruction>& before,
+                             const std::vector<TACInstruction>& after,
+                             const std::string& passName);
+    void populateAllPasses();
+    void populateSinglePass(int index);
+    void updateStatsTable();
+    void updateImpactBar();
+
+private slots:
+    void onViewModeChanged();
+    void onPassSelected(int index);
 
 public:
     explicit OptimizationPanel(QWidget* parent = nullptr);

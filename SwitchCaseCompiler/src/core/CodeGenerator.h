@@ -46,21 +46,4 @@ public:
     void reset();
 };
 
-// Target Code Optimizer
-class TargetCodeOptimizer {
-private:
-    std::vector<AssemblyInstruction> assembly;
-    
-    std::vector<AssemblyInstruction> removeRedundantMoves(const std::vector<AssemblyInstruction>& code);
-    std::vector<AssemblyInstruction> instructionReordering(const std::vector<AssemblyInstruction>& code);
-    
-public:
-    TargetCodeOptimizer();
-    
-    void setAssembly(const std::vector<AssemblyInstruction>& code);
-    std::vector<AssemblyInstruction> optimize();
-    
-    const std::vector<AssemblyInstruction>& getAssembly() const { return assembly; }
-};
-
 #endif // CODE_GENERATOR_H

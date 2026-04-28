@@ -22,6 +22,7 @@ struct OptimizationResult {
 class Optimizer {
 private:
     std::vector<TACInstruction> instructions;
+    std::vector<TACInstruction> originalInstructions;  // Preserved raw TAC before any optimization
     std::vector<OptimizationResult> optimizationResults;
     
     // Individual optimization passes
@@ -60,6 +61,7 @@ public:
                                        bool algebraic = true, bool copyProp = true, bool strengthRed = true);
     
     const std::vector<TACInstruction>& getInstructions() const { return instructions; }
+    const std::vector<TACInstruction>& getOriginalInstructions() const { return originalInstructions; }
     const std::vector<OptimizationResult>& getOptimizationResults() const { 
         return optimizationResults; 
     }

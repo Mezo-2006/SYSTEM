@@ -44,7 +44,6 @@ private:
     std::unique_ptr<TACGenerator> tacGenerator;
     std::unique_ptr<Optimizer> optimizer;
     std::unique_ptr<CodeGenerator> codeGenerator;
-    std::unique_ptr<TargetCodeOptimizer> targetOptimizer;
     
     // Syntax highlighter
     SyntaxHighlighter* syntaxHighlighter;
@@ -61,8 +60,8 @@ private:
     QLabel* validityLabel;
     QProgressBar* phaseProgressBar;
     QFrame* phaseTimelineFrame;
-    std::array<QLabel*, 7> phaseBadges{};
-    std::array<QLabel*, 7> phaseDurations{};
+    std::array<QLabel*, 6> phaseBadges{};
+    std::array<QLabel*, 6> phaseDurations{};
     
     // Tab 2: Derivation Viewer
     QWidget* derivationTab;

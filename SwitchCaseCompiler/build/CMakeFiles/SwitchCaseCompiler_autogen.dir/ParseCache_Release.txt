@@ -1726,6 +1726,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qglobalstatic.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qhash.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qhashfunctions.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qiodevice.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qiodevicebase.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qitemselectionmodel.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qiterable.h
@@ -1798,6 +1799,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtversionchecks.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtypeinfo.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qtypes.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qurl.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qutf8stringview.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvariant.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtCore/qvarlengtharray.h
@@ -1817,12 +1819,14 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qkeysequence.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpaintdevice.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpalette.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpicture.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpixelformat.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpixmap.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qpolygon.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qregion.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qrgb.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qrgba64.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qtextdocument.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qtgui-config.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qtguiexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qtguiglobal.h
@@ -1831,7 +1835,11 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs_win.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QCheckBox
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QComboBox
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QLabel
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QPushButton
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QRadioButton
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QScrollArea
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QTableWidget
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/QWidget
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractbutton.h
@@ -1841,9 +1849,13 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractslider.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qabstractspinbox.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qcheckbox.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qcombobox.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qframe.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qlabel.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qpushbutton.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qradiobutton.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qrubberband.h
+ mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qscrollarea.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qsizepolicy.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qslider.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qstyle.h
