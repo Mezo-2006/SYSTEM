@@ -263,12 +263,16 @@ void DerivationViewer::displayStep(int stepIndex) {
         QStringList tokens = str.split(" ", Qt::SkipEmptyParts);
         QString html;
         for (const QString& t : tokens) {
-            bool isTerminal = (t == "switch" || t == "case" || t == "break" || t == "default" ||
-                               t == "{" || t == "}" || t == "(" || t == ")" || 
-                               t == ":" || t == ";" || t == "=" || t == "+" || t == "-" || 
-                               t == "*" || t == "/" || t == "<" || t == ">" || t == "cin" || 
-                               t == "cout" || t == "int" || t == "float" || t == "double" ||
-                               t == "bool" || t == "char" || t == "id" || t == "num");
+            bool isNonTerminal = (t == "program" || t == "preamble_opt" || t == "using_opt" ||
+                                  t == "pre_stmt_list" || t == "pre_stmt" || t == "declaration" ||
+                                  t == "type_spec" || t == "decl_init_opt" || t == "assignment" ||
+                                  t == "switch_stmt" || t == "case_list" || t == "case_clause" ||
+                                  t == "default_clause" || t == "stmt_list" || t == "stmt" ||
+                                  t == "expr" || t == "expr_tail" || t == "term" || 
+                                  t == "term_tail" || t == "factor" || t == "identifier" || 
+                                  t == "int_constant" || t == "string_literal" || 
+                                  t == "cin_stmt" || t == "cout_stmt");
+            bool isTerminal = !isNonTerminal;
             
             if (isTerminal) {
                 html += QString("<span style='background-color: #252526; color: #4ec9b0;'>&nbsp;%1&nbsp;</span> ").arg(t.toHtmlEscaped());

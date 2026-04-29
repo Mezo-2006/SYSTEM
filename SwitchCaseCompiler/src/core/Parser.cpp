@@ -204,7 +204,8 @@ void Parser::performRightmostDerivation() {
         "pre_stmt_list", "pre_stmt", "declaration", "type_spec", "decl_init_opt", "assignment",
         "switch_stmt", "case_list", "case_clause", "default_clause", "stmt_list",
         "cin_stmt", "cout_stmt",
-        "stmt", "expr", "expr_tail", "term", "term_tail", "factor"
+        "stmt", "expr", "expr_tail", "term", "term_tail", "factor",
+        "identifier", "int_constant", "string_literal"
     };
 
     const auto isNonTerminal = [&nonTerminals](const std::string& symbol) {

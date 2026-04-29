@@ -202,8 +202,9 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Lexer.h
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/CodeGenerator.h
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Lexer.h
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Optimizer.h
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ThreeColumnView.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -583,11 +584,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Parser.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Optimizer.h
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/SemanticAnalyzer.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/CodeEditor.cpp
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.cpp
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/TACGenerator.h
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ASTView.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -759,7 +756,9 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/TACSimulator.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/TACGenerator.h
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/CodeEditor.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/DerivationViewer.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -959,7 +958,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Lexer.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/TACSimulator.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/GrammarCoverage.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -1122,6 +1121,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Lexer.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/IRFlowDiagram.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -1655,7 +1655,6 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/TokenChart.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/OptimizationDiff.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -1842,6 +1841,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/TokenChart.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/OptimizationPanel.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -2214,7 +2214,6 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ShortcutOverlay.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PerformanceMetrics.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PerformanceMetrics.h
@@ -2401,6 +2400,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ShortcutOverlay.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PipelineDiagram.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PipelineDiagram.h
@@ -2571,9 +2571,6 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ThreeColumnView.cpp
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/CompileReport.cpp
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Parser.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ShortcutOverlay.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ShortcutOverlay.h
@@ -2734,7 +2731,9 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PerformanceMetrics.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Parser.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/CompileReport.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ThreeColumnView.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/SyntaxHighlighter.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/SyntaxHighlighter.h
@@ -2919,7 +2918,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qvectornd.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtGui/qwindowdefs_win.h
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PipelineDiagram.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PerformanceMetrics.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/TACSimulator.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/AST.h
@@ -3119,6 +3118,7 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsexports.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h
  mdp:D:/Qt/6.8.3/msvc2022_64/include/QtWidgets/qwidget.h
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/PipelineDiagram.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/TokenChart.h
  mmc:Q_OBJECT
  mdp:C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Lexer.h
@@ -3278,8 +3278,8 @@ C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/CodeGenerator.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/Optimizer.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/SemanticAnalyzer.cpp
-C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ASTView.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/core/TACGenerator.cpp
+C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/ASTView.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/DerivationViewer.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/GrammarCoverage.cpp
 C:/Users/Mizo/OneDrive - Arab Academy for Science and Technology/Desktop/SYSTEM/SwitchCaseCompiler/src/gui/IRFlowDiagram.cpp
