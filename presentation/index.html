@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Switch-Case Compiler — Presentation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="deck" class="deck">
+    <section class="slide title">
+      <h1>Switch-Case Compiler</h1>
+      <p class="subtitle">Educational compiler demonstrating compilation phases and visualizations</p>
+      <p class="meta">Prepared from repository: <em>SwitchCaseCompiler</em></p>
+      <p class="hint">Use arrow keys or click to navigate · press `H` for help</p>
+    </section>
+
+    <section class="slide">
+      <h2>Overview</h2>
+      <ul>
+        <li>Educational compiler for a simplified language focused on switch-case statements</li>
+        <li>Demonstrates lexer, parser (rightmost derivation), semantic analysis, TAC, optimizations, codegen</li>
+        <li>Includes a Qt-based GUI with multiple visualization panels</li>
+      </ul>
+    </section>
+
+    <section class="slide">
+      <h2>Key Features</h2>
+      <ul>
+        <li>Derivation Step Viewer — animated rightmost derivation</li>
+        <li>Parse Tree & Token / Symbol Tables</li>
+        <li>Three-Column Trace: Source / TAC / Assembly</li>
+        <li>Optimizations: constant folding, DCE, CSE</li>
+      </ul>
+    </section>
+
+    <section class="slide">
+      <h2>Architecture</h2>
+      <ol>
+        <li>Lexical Analysis (scanner + symbol table)</li>
+        <li>Syntax Analysis (explicit derivation parser)</li>
+        <li>Semantic Analysis & TAC generation</li>
+        <li>Optimization passes and target code generation</li>
+      </ol>
+    </section>
+
+    <section class="slide">
+      <h2>Usage & Build</h2>
+      <p>See the project's README and BUILD instructions. Quick notes:</p>
+      <ul>
+        <li>CMake-based build; Qt required for the GUI</li>
+        <li>CLI available for automated testing and regression</li>
+      </ul>
+    </section>
+
+    <section class="slide">
+      <h2>Demo Example</h2>
+      <pre class="code">switch (x) {
+  case 1: y = x + 2; break;
+  case 2: y = x * 3; break;
+  default: y = 0; break;
+}</pre>
+    </section>
+
+    <section class="slide contact">
+      <h2>Next Steps & Contact</h2>
+      <ul>
+        <li>Customize slides with screenshots from `build/` or `examples/`</li>
+        <li>Record a short demo video and embed it</li>
+        <li>Contact: project maintainers in repository</li>
+      </ul>
+      <p class="end">Thanks — ready to adapt these slides further.</p>
+    </section>
+  </div>
+
+  <div id="controls" class="controls">
+    <button id="prev">◀ Prev</button>
+    <span id="progress">1 / 7</span>
+    <button id="next">Next ▶</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

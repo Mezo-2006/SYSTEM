@@ -1,0 +1,17 @@
+:root{--bg:#0f1720;--fg:#e6eef6;--accent:#7dd3fc}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#071027, #0f1720);color:var(--fg)}
+.deck{height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:40px}
+.slide{display:none;max-width:1000px;width:100%;background:rgba(255,255,255,0.03);padding:48px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+.slide.active{display:block}
+.slide h1{font-size:2.4rem;margin:0 0 8px}
+.slide h2{font-size:1.6rem;margin:0 0 12px}
+.subtitle{color:var(--accent);margin-top:8px}
+.meta{opacity:.7}
+.hint{opacity:.6;font-size:.9rem}
+ul,ol{margin:12px 0 0;padding-left:20px}
+.code{background:rgba(0,0,0,0.3);padding:12px;border-radius:6px;overflow:auto}
+.controls{height:64px;display:flex;align-items:center;justify-content:center;gap:12px}
+.controls button{background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--fg);padding:8px 14px;border-radius:8px;cursor:pointer}
+.controls button:hover{border-color:var(--accent)}
+.contact .end{margin-top:14px;font-weight:600}
