@@ -558,7 +558,7 @@ std::vector<std::unique_ptr<Statement>> Parser::parseStatementList() {
     // stmt_list → stmt stmt_list | ε
     std::vector<std::unique_ptr<Statement>> statements;
 
-    while (match(TokenType::ID) || isTypeToken(currentToken().type) || match(TokenType::CIN) || match(TokenType::COUT)) {
+    while (match(TokenType::ID) || isTypeToken(currentToken().type) || match(TokenType::CIN) || match(TokenType::COUT) || match(TokenType::SWITCH)) {
         statements.push_back(parseStatement());
     }
     
@@ -573,6 +573,8 @@ std::unique_ptr<Statement> Parser::parseStatement() {
         return parseCinStatement();
     } else if (match(TokenType::COUT)) {
         return parseCoutStatement();
+    } else if (match(TokenType::SWITCH)) {
+        return parseSwitchStatement();
     }
     return parseAssignmentStatement();
 }
@@ -797,7 +799,7 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
 
     flattenExpr = [&](const Expression* expr, std::vector<const Expression*>& terms, std::vector<std::string>& ops) {
         if (auto bin = dynamic_cast<const BinaryExpression*>(expr)) {
-            if (bin->op == "+" || bin->op == "-") {
+            if (bin->op == "+" || bin->op == "-" || bin->op == "<<" || bin->op == ">>") {
                 flattenExpr(bin->left.get(), terms, ops);
                 ops.push_back(bin->op);
                 terms.push_back(bin->right.get());
@@ -895,6 +897,28 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
         return node;
     };
 
+    std::function<std::unique_ptr<ParseTreeNode>(const SwitchStatement*)> buildSwitchStmt;
+
+    auto buildCin = [&](const CinStatement* cinStmt) {
+        auto cinNode = makeNonTerminal("cin_stmt");
+        cinNode->children.push_back(makeTerminal("cin"));
+        cinNode->children.push_back(makeTerminal(">>"));
+        auto identNode = makeNonTerminal("identifier");
+        identNode->children.push_back(makeTerminal(cinStmt->variableName));
+        cinNode->children.push_back(std::move(identNode));
+        cinNode->children.push_back(makeTerminal(";"));
+        return cinNode;
+    };
+
+    auto buildCout = [&](const CoutStatement* coutStmt) {
+        auto coutNode = makeNonTerminal("cout_stmt");
+        coutNode->children.push_back(makeTerminal("cout"));
+        coutNode->children.push_back(makeTerminal("<<"));
+        coutNode->children.push_back(buildExpr(coutStmt->expression.get()));
+        coutNode->children.push_back(makeTerminal(";"));
+        return coutNode;
+    };
+
     std::function<std::unique_ptr<ParseTreeNode>(const Statement*)> buildPreStmt;
     std::function<std::unique_ptr<ParseTreeNode>(const Statement*)> buildStmtCore;
 
@@ -937,6 +961,10 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
             node->children.push_back(buildDecl(decl));
         } else if (auto assign = dynamic_cast<const AssignmentStatement*>(stmt)) {
             node->children.push_back(buildAssign(assign));
+        } else if (auto cinStmt = dynamic_cast<const CinStatement*>(stmt)) {
+            node->children.push_back(buildCin(cinStmt));
+        } else if (auto coutStmt = dynamic_cast<const CoutStatement*>(stmt)) {
+            node->children.push_back(buildCout(coutStmt));
         } else {
             // fallback for anything else
             auto dummy = makeNonTerminal("assignment");
@@ -964,6 +992,12 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
             node->children.push_back(buildDecl(decl));
         } else if (auto assign = dynamic_cast<const AssignmentStatement*>(stmt)) {
             node->children.push_back(buildAssign(assign));
+        } else if (auto cinStmt = dynamic_cast<const CinStatement*>(stmt)) {
+            node->children.push_back(buildCin(cinStmt));
+        } else if (auto coutStmt = dynamic_cast<const CoutStatement*>(stmt)) {
+            node->children.push_back(buildCout(coutStmt));
+        } else if (auto sw = dynamic_cast<const SwitchStatement*>(stmt)) {
+            node->children.push_back(buildSwitchStmt(sw));
         } else {
             auto dummy = makeNonTerminal("assignment");
             dummy->children.push_back(makeTerminal("error"));
@@ -1024,7 +1058,7 @@ std::unique_ptr<ParseTreeNode> Parser::buildParseTree() {
         return defaultNode;
     };
 
-    auto buildSwitchStmt = [&](const SwitchStatement* switchStmt) {
+    buildSwitchStmt = [&](const SwitchStatement* switchStmt) {
         auto switchNode = makeNonTerminal("switch_stmt");
         if (!switchStmt) {
             switchNode->children.push_back(makeTerminal("ε"));
@@ -1117,32 +1151,39 @@ void Parser::validateOnlyValidStatements() {
         return dynamic_cast<const DeclarationStatement*>(stmt) ||
                dynamic_cast<const AssignmentStatement*>(stmt) ||
                dynamic_cast<const CinStatement*>(stmt) ||
-               dynamic_cast<const CoutStatement*>(stmt);
+               dynamic_cast<const CoutStatement*>(stmt) ||
+               dynamic_cast<const SwitchStatement*>(stmt);
+    };
+    
+    std::function<bool(const Statement*)> checkValidRecursive = [&](const Statement* stmt) -> bool {
+        if (!isValidStatement(stmt)) return false;
+        
+        if (auto sw = dynamic_cast<const SwitchStatement*>(stmt)) {
+            for (const auto& caseClause : sw->cases) {
+                for (const auto& innerStmt : caseClause->statements) {
+                    if (!checkValidRecursive(innerStmt.get())) return false;
+                }
+            }
+            if (sw->defaultCase) {
+                for (const auto& innerStmt : sw->defaultCase->statements) {
+                    if (!checkValidRecursive(innerStmt.get())) return false;
+                }
+            }
+        }
+        return true;
     };
     
     for (const auto& stmt : astRoot->preSwitchStatements) {
-        if (!isValidStatement(stmt.get())) {
+        if (!checkValidRecursive(stmt.get())) {
             addError("ERROR: Inside main(), only declarations, assignments, cin/cout, and switch are allowed");
             return;
         }
     }
     
     if (astRoot->switchStmt) {
-        for (const auto& caseClause : astRoot->switchStmt->cases) {
-            for (const auto& stmt : caseClause->statements) {
-                if (!isValidStatement(stmt.get())) {
-                    addError("ERROR: Inside case blocks, only declarations, assignments, and cin/cout are allowed");
-                    return;
-                }
-            }
-        }
-        if (astRoot->switchStmt->defaultCase) {
-            for (const auto& stmt : astRoot->switchStmt->defaultCase->statements) {
-                if (!isValidStatement(stmt.get())) {
-                    addError("ERROR: Inside default block, only declarations, assignments, and cin/cout are allowed");
-                    return;
-                }
-            }
+        if (!checkValidRecursive(astRoot->switchStmt.get())) {
+            addError("ERROR: Inside case blocks, only declarations, assignments, cin/cout, and switch are allowed");
+            return;
         }
     }
 }

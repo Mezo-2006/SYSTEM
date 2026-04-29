@@ -239,7 +239,8 @@ void SemanticAnalyzer::visit(SwitchStatement* node) {
         }
     }
     
-    // Clear used case values for this switch
+    // Save outer used case values for nested switches
+    auto previousCaseValues = usedCaseValues;
     usedCaseValues.clear();
     
     // Check each case
@@ -252,6 +253,8 @@ void SemanticAnalyzer::visit(SwitchStatement* node) {
         node->defaultCase->accept(this);
     }
     
+    // Restore outer used case values
+    usedCaseValues = previousCaseValues;
     symbolTable.exitScope();
 }
 
