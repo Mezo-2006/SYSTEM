@@ -113,6 +113,21 @@ void DerivationViewer::setupUI() {
     );
     detailsLayout->addWidget(rightmostNonTerminalLabel);
 
+    sourceLineLabel = new QLabel("📝 Source Line: (none)");
+    sourceLineLabel->setStyleSheet(
+        "QLabel {"
+        "  font-size: 13px; "
+        "  padding: 8px 12px; "
+        "  background-color: #2b2b2b; "
+        "  border-left: 4px solid #4ec9b0; "
+        "  border-radius: 4px; "
+        "  color: #d4d4d4; "
+        "  font-weight: 600; "
+        "  margin-bottom: 5px;"
+        "}"
+    );
+    detailsLayout->addWidget(sourceLineLabel);
+
     // Controls
     QHBoxLayout* controlLayout = new QHBoxLayout();
 
@@ -196,6 +211,7 @@ void DerivationViewer::setDerivationSteps(const std::vector<DerivationStep>& der
         sententialFormDisplay->clear();
         productionRuleLabel->setText("➤ Production Applied: ");
         rightmostNonTerminalLabel->setText("🎯 Target rightmost non-terminal: (none)");
+        sourceLineLabel->setText("📝 Source Line: (none)");
     }
 
     {
@@ -213,19 +229,12 @@ void DerivationViewer::refreshStepList() {
     for (size_t i = 0; i < steps.size(); ++i) {
         const auto& step = steps[i];
         QString rule = QString::fromStdString(step.productionRule);
-        if (rule.length() > 34) {
-            rule = rule.left(31) + "...";
-        }
-
-        QString preview = QString::fromStdString(step.sententialForm);
-        if (preview.length() > 30) {
-            preview = preview.left(27) + "...";
-        }
+        QString form = QString::fromStdString(step.sententialForm);
 
         stepListWidget->addItem(QString("%1 | %2 | %3")
             .arg(i + 1, 3, 10, QChar('0'))
-            .arg(rule)
-            .arg(preview));
+            .arg(rule.leftJustified(25))
+            .arg(form));
     }
 }
 
@@ -247,76 +256,64 @@ void DerivationViewer::goToStep(int stepIndex) {
 }
 
 void DerivationViewer::displayStep(int stepIndex) {
-    if (stepIndex < 0 || stepIndex >= static_cast<int>(steps.size())) {
-        return;
-    }
+    if (stepIndex < 0 || stepIndex >= static_cast<int>(steps.size())) return;
     
     const auto& step = steps[stepIndex];
-    
-    // Display sentential form with rich formatting (HTML chips mapping)
     sententialFormDisplay->clear();
-    
-    QString text = QString::fromStdString(step.sententialForm);
-    
-    auto styleTokens = [](const QString& str) -> QString {
-        if (str.isEmpty()) return "";
-        QStringList tokens = str.split(" ", Qt::SkipEmptyParts);
+
+    const QString prev = QString::fromStdString(step.previousSententialForm);
+    const QString after = QString::fromStdString(step.sententialForm);
+
+    auto formatWithHighlight = [](const QString& form, int charPos, const std::string& symbol) {
+        if (form.isEmpty()) {
+            return QString("-");
+        }
         QString html;
-        for (const QString& t : tokens) {
-            bool isNonTerminal = (t == "program" || t == "preamble_opt" || t == "using_opt" ||
-                                  t == "pre_stmt_list" || t == "pre_stmt" || t == "declaration" ||
-                                  t == "type_spec" || t == "decl_init_opt" || t == "assignment" ||
-                                  t == "switch_stmt" || t == "case_list" || t == "case_clause" ||
-                                  t == "default_clause" || t == "stmt_list" || t == "stmt" ||
-                                  t == "expr" || t == "expr_tail" || t == "term" || 
-                                  t == "term_tail" || t == "factor" || t == "identifier" || 
-                                  t == "int_constant" || t == "string_literal" || 
-                                  t == "cin_stmt" || t == "cout_stmt");
-            bool isTerminal = !isNonTerminal;
-            
-            if (isTerminal) {
-                html += QString("<span style='background-color: #252526; color: #4ec9b0;'>&nbsp;%1&nbsp;</span> ").arg(t.toHtmlEscaped());
-            } else {
-                html += QString("<span style='background-color: #1e1e1e; color: #569cd6;'>&nbsp;%1&nbsp;</span> ").arg(t.toHtmlEscaped());
+        if (charPos >= 0 && !symbol.empty()) {
+            const QString target = QString::fromStdString(symbol);
+            if (charPos <= form.length() && charPos + target.length() <= form.length()) {
+                const QString before = form.left(charPos);
+                const QString mid = form.mid(charPos, target.length());
+                const QString rest = form.mid(charPos + target.length());
+                html = QString("%1<span style='background-color:#4d0000;color:#f48771;border:2px solid #f48771;border-radius:4px;padding:1px 4px;'><b>%2</b></span>%3")
+                           .arg(before.toHtmlEscaped(), mid.toHtmlEscaped(), rest.toHtmlEscaped());
+                return html;
             }
         }
-        return html;
+        return form.toHtmlEscaped();
     };
 
-    QString html = "<div style='font-family: \"Consolas\", monospace; font-size: 16px; line-height: 2.2; text-align: center;'>";
-    
-    if (step.rightmostNonTerminalPos >= 0 && step.rightmostNonTerminalPos <= text.length()) {
-        QString before = text.left(step.rightmostNonTerminalPos);
-        QString target = QString::fromStdString(step.rightmostNonTerminal);
-        QString after = text.mid(step.rightmostNonTerminalPos + target.length());
-        
-        html += styleTokens(before);
-        if (!target.isEmpty()) {
-            html += QString("<span style='background-color: #4d0000; color: #f48771; border: 2px solid #f48771; font-weight: bold; font-size: 18px;'>&nbsp;%1&nbsp;</span> ").arg(target.toHtmlEscaped());
-        }
-        html += styleTokens(after);
-    } else {
-        html += styleTokens(text);
-    }
-    
+    QString html = "<div style='font-family:\"Consolas\",monospace;font-size:15px;line-height:1.9;color:#d4d4d4;'>";
+    html += "<div style='margin-bottom:10px;color:#888;'>Sentential Form Step " + QString::number(stepIndex + 1) + "</div>";
+    html += "<div style='margin-bottom:6px;'><b>Before:</b> " +
+            formatWithHighlight(prev, step.expandedNonTerminalPos, step.expandedNonTerminal) + "</div>";
+    html += "<div style='margin-bottom:6px;color:#fbbf24;'><b>Rewrite:</b> " +
+            QString::fromStdString(step.productionRule).toHtmlEscaped() + "</div>";
+    html += "<div><b>After:</b> " +
+            formatWithHighlight(after, step.rightmostNonTerminalPos, step.rightmostNonTerminal) + "</div>";
     html += "</div>";
     sententialFormDisplay->setHtml(html);
     
-    // Display production rule
-    productionRuleLabel->setText(QString("➤ Production Applied: %1").arg(
-        QString::fromStdString(step.productionRule)));
+    // Header labels
+    productionRuleLabel->setText(QString("➤ Production Applied: %1").arg(QString::fromStdString(step.productionRule)));
 
-    if (step.rightmostNonTerminal.empty() || step.rightmostNonTerminalPos < 0) {
-        rightmostNonTerminalLabel->setText("🎯 Target rightmost non-terminal: (none)");
+    if (step.rightmostNonTerminal.empty()) {
+        rightmostNonTerminalLabel->setText("🎯 Next expansion: (none)");
     } else {
         rightmostNonTerminalLabel->setText(
-            QString("🎯 Target rightmost non-terminal: %1 (position %2)")
+            QString("🎯 Next expansion target: %1 (position %2)")
                 .arg(QString::fromStdString(step.rightmostNonTerminal))
                 .arg(step.rightmostNonTerminalPos)
         );
     }
     
-    // Update step counter
+    QString ctx = QString::fromStdString(step.contextTag.empty() ? "grammar" : step.contextTag);
+    if (step.sourceLine > 0) {
+        sourceLineLabel->setText(QString("📝 Source Line: %1 | Phase: %2").arg(step.sourceLine).arg(ctx));
+    } else {
+        sourceLineLabel->setText(QString("📝 Source Line: (none) | Phase: %2").arg(ctx));
+    }
+    
     stepCounterLabel->setText(QString("Step: %1 / %2").arg(stepIndex + 1).arg(steps.size()));
 
     if (stepListWidget && stepListWidget->currentRow() != stepIndex) {
@@ -438,13 +435,61 @@ void DerivationViewer::onExportRules() {
     }
     
     QTextStream out(&file);
-    out << "Rightmost Derivation Rules Applied:\n";
-    out << "=================================\n\n";
+    out << "Rightmost Derivation Trace (verifiable):\n";
+    out << "=======================================\n\n";
+
+    auto isNonTerminal = [](const QString& t) {
+        return (t == "program" || t == "preamble_opt" || t == "using_opt" ||
+                t == "pre_stmt_list" || t == "pre_stmt" || t == "declaration" ||
+                t == "type_spec" || t == "decl_init_opt" || t == "assignment" ||
+                t == "switch_stmt" || t == "case_list" || t == "case_clause" ||
+                t == "default_clause" || t == "stmt_list" || t == "stmt" ||
+                t == "expr" || t == "expr_tail" || t == "term" ||
+                t == "term_tail" || t == "factor" || t == "identifier" ||
+                t == "int_constant" || t == "string_literal" ||
+                t == "cin_stmt" || t == "cout_stmt");
+    };
+
+    auto charPosToTokenIndex = [](const QStringList& tokens, int charPos) {
+        if (charPos < 0) return -1;
+        int running = 0;
+        for (int i = 0; i < tokens.size(); ++i) {
+            const int start = running;
+            const int end = start + tokens[i].length();
+            if (charPos >= start && charPos < end) {
+                return i;
+            }
+            running = end + 1; // one space separator
+        }
+        return -1;
+    };
     
     for (size_t i = 0; i < steps.size(); ++i) {
-        if (!steps[i].productionRule.empty()) {
-            out << QString::number(i + 1) << ". " << QString::fromStdString(steps[i].productionRule) << "\n";
+        const auto& step = steps[i];
+        const QString before = QString::fromStdString(step.previousSententialForm);
+        const QStringList beforeTokens = before.split(" ", Qt::SkipEmptyParts);
+        const int expandedTokenIndex = charPosToTokenIndex(beforeTokens, step.expandedNonTerminalPos);
+
+        bool strictRightmostOk = true;
+        if (!step.expandedNonTerminal.empty() && expandedTokenIndex >= 0) {
+            for (int j = expandedTokenIndex + 1; j < beforeTokens.size(); ++j) {
+                if (isNonTerminal(beforeTokens[j])) {
+                    strictRightmostOk = false;
+                    break;
+                }
+            }
         }
+
+        out << QString::number(i + 1) << ". Rule: " << QString::fromStdString(step.productionRule) << "\n";
+        out << "   Before: " << QString::fromStdString(step.previousSententialForm.empty() ? "-" : step.previousSententialForm) << "\n";
+        out << "   After : " << QString::fromStdString(step.sententialForm) << "\n";
+        out << "   Expanded symbol: " << QString::fromStdString(step.expandedNonTerminal.empty() ? "-" : step.expandedNonTerminal)
+            << " (pos " << step.expandedNonTerminalPos << ")\n";
+        out << "   Next rightmost: " << QString::fromStdString(step.rightmostNonTerminal.empty() ? "-" : step.rightmostNonTerminal)
+            << " (pos " << step.rightmostNonTerminalPos << ")\n";
+        out << "   Strict-rightmost check: " << (strictRightmostOk ? "PASS" : "FAIL") << "\n";
+        out << "   Context: " << QString::fromStdString(step.contextTag.empty() ? "unknown" : step.contextTag)
+            << " | Source line: " << step.sourceLine << "\n\n";
     }
     
     file.close();

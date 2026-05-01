@@ -21,6 +21,7 @@ private:
     QTextEdit* sententialFormDisplay;
     QLabel* productionRuleLabel;
     QLabel* rightmostNonTerminalLabel;
+    QLabel* sourceLineLabel;
     QLabel* stepCounterLabel;
     QListWidget* stepListWidget;
     QCheckBox* stepByStepModeCheck;

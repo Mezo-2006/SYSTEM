@@ -5,7 +5,6 @@
 #include <cerrno>
 #include <climits>
 #include <cctype>
-#include <unordered_set>
 #include <functional>
 
 namespace {
@@ -110,19 +109,26 @@ void Parser::advance() {
     }
 }
 
-void Parser::addDerivationStep(const std::string& sententialForm, 
+void Parser::addDerivationStep(const std::string& previousForm,
+                              const std::string& sententialForm, 
                               const std::string& rule,
-                              const std::string& rightmostNonTerm) {
-    // Find position of rightmost non-terminal
-    int pos = -1;
-    if (!rightmostNonTerm.empty()) {
-        size_t foundPos = sententialForm.rfind(rightmostNonTerm);
-        if (foundPos != std::string::npos) {
-            pos = static_cast<int>(foundPos);
-        }
-    }
-    
-    derivationSteps.push_back(DerivationStep(sententialForm, rule, pos, rightmostNonTerm));
+                              const std::string& expandedNT,
+                              int expandedPos,
+                              const std::string& nextNT,
+                              int nextPos,
+                              int sourceLine,
+                              const std::string& context) {
+    derivationSteps.push_back(DerivationStep(
+        previousForm,
+        sententialForm,
+        rule,
+        expandedNT,
+        expandedPos,
+        nextNT,
+        nextPos,
+        sourceLine,
+        context
+    ));
 }
 
 void Parser::addError(const std::string& message, const std::string& expected) {
@@ -198,115 +204,143 @@ bool Parser::parse() {
 
 void Parser::performRightmostDerivation() {
     derivationSteps.clear();
-    const std::unordered_set<std::string> nonTerminals = {
-        "program", "include_list", "include_line", "header_name", "preamble_opt", "using_opt",
-        "main_func", "return_stmt",
-        "pre_stmt_list", "pre_stmt", "declaration", "type_spec", "decl_init_opt", "assignment",
-        "switch_stmt", "case_list", "case_clause", "default_clause", "stmt_list",
-        "cin_stmt", "cout_stmt",
-        "stmt", "expr", "expr_tail", "term", "term_tail", "factor",
-        "identifier", "int_constant", "string_literal"
-    };
-
-    const auto isNonTerminal = [&nonTerminals](const std::string& symbol) {
-        return nonTerminals.find(symbol) != nonTerminals.end();
-    };
-
+    
+    // Helper to join symbols with a space delimiter
     const auto joinSymbols = [](const std::vector<std::string>& symbols) {
-        if (symbols.empty()) {
-            return std::string("ε");
-        }
+        if (symbols.empty()) return std::string("ε");
         std::ostringstream out;
         for (size_t i = 0; i < symbols.size(); ++i) {
-            if (i > 0) {
-                out << " ";
-            }
+            if (i > 0) out << " ";
             out << symbols[i];
         }
         return out.str();
     };
 
-    if (!parseTree) {
-        addDerivationStep("program", "Start Symbol", "program");
-        return;
-    }
-
-    struct Expansion {
-        ParseTreeNode* node;
-        std::string lhs;
-        std::vector<std::string> rhs;
+    // Helper to calculate character offset of a symbol in the joined string
+    auto calculateCharPos = [](const std::vector<SententialSymbol>& form, int symbolIdx) {
+        if (symbolIdx < 0 || symbolIdx >= static_cast<int>(form.size())) return -1;
+        int pos = 0;
+        for (int i = 0; i < symbolIdx; ++i) {
+            pos += static_cast<int>(form[i].text.length()) + 1;
+        }
+        return pos;
     };
 
-    std::vector<Expansion> expansions;
+    if (!parseTree) return;
 
-    std::function<void(ParseTreeNode*)> collectRightmostExpansions = [&](ParseTreeNode* node) {
-        if (!node || node->isTerminal || !isNonTerminal(node->label)) {
-            return;
+    // --- State Initialization ---
+    // The Sentential Form is represented as a mutable vector of symbols.
+    struct SententialSymbol {
+        std::string text;
+        ParseTreeNode* node;
+        bool isNonTerminal;
+    };
+    
+    std::vector<SententialSymbol> currentForm;
+    currentForm.push_back({parseTree->label.empty() ? "program" : parseTree->label, parseTree.get(), true});
+
+    // Record Initial State: The start symbol
+    std::string startForm = joinSymbols({currentForm[0].text});
+    addDerivationStep("", startForm, "Start Symbol", "", -1, currentForm[0].text, 0, -1, "grammar");
+
+    // --- Derivation Simulation Loop ---
+    int safetyCounter = 0;
+    while (safetyCounter++ < 3000) {
+        // 1. SCAN: Find the rightmost non-terminal
+        int rightmostIdx = -1;
+        for (int i = static_cast<int>(currentForm.size()) - 1; i >= 0; --i) {
+            if (currentForm[i].isNonTerminal) {
+                rightmostIdx = i;
+                break;
+            }
         }
 
-        std::vector<std::string> rhs;
-        if (node->children.empty()) {
-            rhs.push_back("ε");
+        if (rightmostIdx == -1) break; // Derivation Complete (all terminals)
+
+        // 2. VALIDATE: Formal Rightmost Invariant Check
+        for (int j = rightmostIdx + 1; j < static_cast<int>(currentForm.size()); ++j) {
+            if (currentForm[j].isNonTerminal) {
+                addError("Formal Correctness Violation: Expansion of non-rightmost NT detected.");
+                return;
+            }
+        }
+
+        // 3. CAPTURE: State before rewriting
+        std::vector<std::string> prevLabels;
+        for (const auto& s : currentForm) prevLabels.push_back(s.text);
+        std::string beforeFormStr = joinSymbols(prevLabels);
+        int expandedCharPos = calculateCharPos(currentForm, rightmostIdx);
+
+        // 4. REWRITE: Replace the selected NT with its production RHS
+        SententialSymbol toExpand = currentForm[rightmostIdx];
+        ParseTreeNode* node = toExpand.node;
+        
+        std::vector<SententialSymbol> rhsExpansion;
+        std::vector<std::string> rhsLabels;
+        
+        if (node->children.empty() || (node->children.size() == 1 && node->children[0]->label == "ε")) {
+            rhsLabels.push_back("ε");
+            // Production A → ε deletes the NT from the form
         } else {
             for (const auto& child : node->children) {
-                rhs.push_back(child->label);
+                rhsLabels.push_back(child->label);
+                if (child->label != "ε") {
+                    rhsExpansion.push_back({child->label, child.get(), !child->isTerminal});
+                }
             }
         }
-        expansions.push_back({node, node->label, rhs});
 
-        for (auto it = node->children.rbegin(); it != node->children.rend(); ++it) {
-            if (!(*it)->isTerminal && isNonTerminal((*it)->label)) {
-                collectRightmostExpansions(it->get());
-            }
-        }
-    };
+        // Update the mutable sentential form state
+        currentForm.erase(currentForm.begin() + rightmostIdx);
+        currentForm.insert(currentForm.begin() + rightmostIdx, rhsExpansion.begin(), rhsExpansion.end());
 
-    collectRightmostExpansions(parseTree.get());
-
-    std::vector<std::string> sententialForm = {parseTree->label.empty() ? "program" : parseTree->label};
-    parseTree->derivationStep = 0;
-    addDerivationStep(joinSymbols(sententialForm), "Start Symbol", sententialForm.front());
-
-    for (const auto& exp : expansions) {
-        int replaceIndex = -1;
-        for (int i = static_cast<int>(sententialForm.size()) - 1; i >= 0; --i) {
-            if (sententialForm[static_cast<size_t>(i)] == exp.lhs) {
-                replaceIndex = i;
+        // 5. POST-SCAN: Identify next expansion target for GUI
+        int nextIdx = -1;
+        std::string nextSym = "";
+        for (int i = static_cast<int>(currentForm.size()) - 1; i >= 0; --i) {
+            if (currentForm[i].isNonTerminal) {
+                nextIdx = i;
+                nextSym = currentForm[i].text;
                 break;
             }
         }
-        if (replaceIndex < 0) {
-            continue;
-        }
+        int nextCharPos = calculateCharPos(currentForm, nextIdx);
 
-        sententialForm.erase(sententialForm.begin() + replaceIndex);
-        if (!(exp.rhs.size() == 1 && exp.rhs[0] == "ε")) {
-            sententialForm.insert(sententialForm.begin() + replaceIndex, exp.rhs.begin(), exp.rhs.end());
-        }
+        // Metadata mapping
+        std::string ctx = "grammar";
+        if (toExpand.text.find("expr") != std::string::npos || toExpand.text.find("term") != std::string::npos || toExpand.text.find("factor") != std::string::npos) ctx = "expression";
+        else if (toExpand.text == "stmt" || toExpand.text == "stmt_list" || toExpand.text == "assignment") ctx = "statement";
+        else if (toExpand.text == "switch_stmt") ctx = "switch";
+        else if (toExpand.text == "case_clause" || toExpand.text == "case_list") ctx = "case";
 
-        std::string rightmostNonTerminal;
-        for (int i = static_cast<int>(sententialForm.size()) - 1; i >= 0; --i) {
-            if (isNonTerminal(sententialForm[static_cast<size_t>(i)])) {
-                rightmostNonTerminal = sententialForm[static_cast<size_t>(i)];
-                break;
-            }
-        }
+        int srcLine = (node->token) ? node->token->line : -1;
 
-        if (exp.node) {
-            exp.node->derivationStep = static_cast<int>(derivationSteps.size());
-        }
-
+        // 6. RECORD: Store the full evolved state
+        std::vector<std::string> currentLabels;
+        for (const auto& s : currentForm) currentLabels.push_back(s.text);
+        
         addDerivationStep(
-            joinSymbols(sententialForm),
-            exp.lhs + " → " + joinSymbols(exp.rhs),
-            rightmostNonTerminal
+            beforeFormStr,
+            joinSymbols(currentLabels),
+            toExpand.text + " → " + joinSymbols(rhsLabels),
+            toExpand.text,
+            expandedCharPos,
+            nextSym,
+            nextCharPos,
+            srcLine,
+            ctx
         );
     }
 
-    addDerivationStep(joinSymbols(sententialForm), "Derivation Complete", "");
+    // Final Record
+    std::vector<std::string> finalLabels;
+    for (const auto& s : currentForm) finalLabels.push_back(s.text);
+    std::string finalStr = joinSymbols(finalLabels);
+    addDerivationStep(finalStr, finalStr, "Derivation Complete", "", -1, "", -1, -1, "grammar");
 }
 
 std::unique_ptr<Program> Parser::parseProgram() {
+
     // program -> include_list preamble_opt main_func
     // program -> preamble_opt pre_stmt_list switch_stmt (legacy subset)
 
@@ -581,7 +615,7 @@ std::unique_ptr<Statement> Parser::parseStatement() {
 }
 
 std::unique_ptr<Statement> Parser::parseDeclarationStatement() {
-    // declaration → (int|string) id [= expr] ;
+    // declaration → (int|string) id [= expr] { , id [= expr] } ;
     int startLine = currentToken().line;
     int startCol = currentToken().column;
 
@@ -597,23 +631,40 @@ std::unique_ptr<Statement> Parser::parseDeclarationStatement() {
         return std::make_unique<DeclarationStatement>("int", "", nullptr, startLine, startCol);
     }
 
-    std::string varName;
-    if (match(TokenType::ID)) {
-        varName = currentToken().lexeme;
-        advance();
-    } else {
-        addError("Expected identifier in declaration");
-    }
+    auto compound = std::make_unique<CompoundStmt>(startLine, startCol);
 
-    std::unique_ptr<Expression> initializer = nullptr;
-    if (match(TokenType::ASSIGN)) {
-        advance();
-        initializer = parseExpression();
+    while (true) {
+        std::string varName;
+        int idLine = currentToken().line;
+        int idCol = currentToken().column;
+        if (match(TokenType::ID)) {
+            varName = currentToken().lexeme;
+            advance();
+        } else {
+            addError("Expected identifier in declaration");
+        }
+
+        std::unique_ptr<Expression> initializer = nullptr;
+        if (match(TokenType::ASSIGN)) {
+            advance();
+            initializer = parseExpression();
+        }
+
+        compound->statements.push_back(std::make_unique<DeclarationStatement>(varType, varName, std::move(initializer), idLine, idCol));
+
+        if (match(TokenType::COMMA)) {
+            advance();
+        } else {
+            break;
+        }
     }
 
     consume(TokenType::SEMICOLON, "Expected ';' after declaration");
 
-    return std::make_unique<DeclarationStatement>(varType, varName, std::move(initializer), startLine, startCol);
+    if (compound->statements.size() == 1) {
+        return std::move(compound->statements[0]);
+    }
+    return compound;
 }
 
 std::unique_ptr<Statement> Parser::parseAssignmentStatement() {

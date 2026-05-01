@@ -1169,6 +1169,21 @@ void MainWindow::onCompile() {
     }
     logToConsole("  Generated " + std::to_string(parser->getDerivationSteps().size()) + " derivation steps");
     
+    // Log full formal derivation sequence
+    logToConsole("\n[FORMAL DERIVATION SEQUENCE]");
+    const auto& steps = parser->getDerivationSteps();
+    if (!steps.empty()) {
+        for (size_t i = 0; i < steps.size(); ++i) {
+            if (steps[i].productionRule != "Derivation Complete" && steps[i].productionRule != "Start Symbol") {
+                logToConsole("  Step " + std::to_string(i + 1) + ": " + steps[i].previousSententialForm);
+                logToConsole("         → " + steps[i].sententialForm + "  (via " + steps[i].productionRule + ")");
+            } else if (steps[i].productionRule == "Start Symbol") {
+                logToConsole("  Step " + std::to_string(i + 1) + ": " + steps[i].sententialForm + "  (Start)");
+            }
+        }
+    }
+    logToConsole("--------------------------------------------------");
+    
     derivationViewer->setDerivationSteps(parser->getDerivationSteps());
     parseTreeView->setParseTree(parser->getParseTree());
     

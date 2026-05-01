@@ -24,17 +24,32 @@ struct ParseTreeNode {
         : label(lbl), isTerminal(term), derivationStep(step), token(tok) {}
 };
 
-// Derivation step for visualization
+// Derivation step for visualization — each step is a complete, verifiable record
 struct DerivationStep {
-    std::string sententialForm;
-    std::string productionRule;
-    int rightmostNonTerminalPos;  // Position of rightmost non-terminal
-    std::string rightmostNonTerminal;
-    
-    DerivationStep(const std::string& form, const std::string& rule, 
-                  int pos = -1, const std::string& nonTerm = "")
-        : sententialForm(form), productionRule(rule), 
-          rightmostNonTerminalPos(pos), rightmostNonTerminal(nonTerm) {}
+    std::string previousSententialForm;   // Full sentential form BEFORE this expansion
+    std::string sententialForm;           // Full sentential form AFTER this expansion
+    std::string productionRule;           // A → α  (human-readable rule applied)
+
+    std::string expandedNonTerminal;      // The non-terminal that was expanded in this step
+    int expandedNonTerminalPos;           // Its position (0-based index) in previousSententialForm
+
+    std::string rightmostNonTerminal;     // The rightmost NT in the RESULT (target for next step)
+    int rightmostNonTerminalPos;          // Its position in sententialForm
+
+    int sourceLine;                       // Mapped source line (-1 if N/A)
+    std::string contextTag;              // "switch", "expression", "statement", "case", "grammar"
+
+    DerivationStep() : expandedNonTerminalPos(-1), rightmostNonTerminalPos(-1), sourceLine(-1) {}
+
+    DerivationStep(const std::string& prevForm, const std::string& form,
+                   const std::string& rule,
+                   const std::string& expandedNT = "", int expandedPos = -1,
+                   const std::string& nextNT = "", int nextPos = -1,
+                   int line = -1, const std::string& ctx = "grammar")
+        : previousSententialForm(prevForm), sententialForm(form), productionRule(rule),
+          expandedNonTerminal(expandedNT), expandedNonTerminalPos(expandedPos),
+          rightmostNonTerminal(nextNT), rightmostNonTerminalPos(nextPos),
+          sourceLine(line), contextTag(ctx) {}
 };
 
 // Parser error
@@ -82,9 +97,15 @@ private:
     bool isTypeToken(TokenType type) const;
     
     // Derivation tracking
-    void addDerivationStep(const std::string& sententialForm, 
+    void addDerivationStep(const std::string& previousForm,
+                          const std::string& sententialForm, 
                           const std::string& rule,
-                          const std::string& rightmostNonTerm);
+                          const std::string& expandedNT = "",
+                          int expandedPos = -1,
+                          const std::string& nextNT = "",
+                          int nextPos = -1,
+                          int sourceLine = -1,
+                          const std::string& context = "grammar");
     
     // Recursive descent parsing methods (building AST)
     std::unique_ptr<Program> parseProgram();

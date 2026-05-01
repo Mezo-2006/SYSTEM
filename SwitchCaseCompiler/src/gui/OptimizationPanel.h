@@ -1,21 +1,38 @@
-#ifndef OPTIMIZATION_PANEL_H
-#define OPTIMIZATION_PANEL_H
+#pragma once
 
 #include <QWidget>
 #include <QCheckBox>
 #include <QTableWidget>
+#include <QListWidget>
 #include <QPushButton>
 #include <QLabel>
-#include <QRadioButton>
-#include <QComboBox>
-#include <QScrollArea>
-#include "../core/Optimizer.h"
+#include <vector>
+#include "Optimizer.h"
 
 class OptimizationPanel : public QWidget {
     Q_OBJECT
 
+public:
+    explicit OptimizationPanel(QWidget* parent = nullptr);
+
+    // Accessors
+    bool isConstantFoldingEnabled() const;
+    bool isDeadCodeEliminationEnabled() const;
+    bool isCseEnabled() const;
+    bool isAlgebraicSimplificationEnabled() const;
+    bool isCopyPropagationEnabled() const;
+    bool isStrengthReductionEnabled() const;
+
+    // Data
+    void setOptimizationResults(const std::vector<OptimizationResult>& optimizationResults);
+
+private slots:
+    void onShowAllClicked();
+    void onPassClicked(QListWidgetItem* item);
+    void onStatsCellClicked(int row, int column);
+
 private:
-    // Optimization toggle checkboxes
+    // UI components
     QCheckBox* constantFoldingCheckbox;
     QCheckBox* deadCodeCheckbox;
     QCheckBox* cseCheckbox;
@@ -23,35 +40,29 @@ private:
     QCheckBox* copyPropCheckbox;
     QCheckBox* strengthReductionCheckbox;
 
-    // View mode: all passes vs single pass
-    QRadioButton* showAllRadio;
-    QRadioButton* showPassRadio;
-    QComboBox* passSelector;
+    // New sidebar for passes
+    QListWidget* passList;               // clickable cards for each pass
+    QPushButton* showAllButton;          // show full before/after view
 
-    // Before/After tables
+    QLabel* summaryLabel;
+    QTableWidget* statsTable;
+    QWidget* impactBar;
     QTableWidget* beforeTable;
     QTableWidget* afterTable;
 
-    // Statistics
-    QTableWidget* statsTable;
-    QLabel* summaryLabel;
-
-    // Impact visualization
-    QWidget* impactBar;
-
+    // Data
     std::vector<OptimizationResult> results;
-    
+
+    // Helpers
     void setupUI();
+    void displayResults();
+    void updateStatsTable();
+    void updateImpactBar();
+    void populateAllPasses();
+    void populateSinglePass(int index);
     void populateBeforeAfter(const std::vector<TACInstruction>& before,
                              const std::vector<TACInstruction>& after,
                              const std::string& passName);
-    void populateAllPasses();
-    void populateSinglePass(int index);
-    void updateStatsTable();
-    void updateImpactBar();
-
-private slots:
-    void onViewModeChanged();
     void onPassSelected(int index);
 
 public:
